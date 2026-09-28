@@ -3,62 +3,1011 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Room Platform - Stage 2A Part 2 [FIXED]</title>
+    <title>Multi-Room Platform - Session 3 (Relay Stats)</title>
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0e27;color:#e1e8ed;line-height:1.5;min-height:100vh}.app-container{display:flex;flex-direction:column;min-height:100vh}header{background:linear-gradient(135deg,#1e3a8a 0%,#0f172a 100%);border-bottom:1px solid #334155;padding:16px 24px;position:sticky;top:0;z-index:100}.header-content{max-width:1400px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}.logo{display:flex;align-items:center;gap:12px}.logo-icon{width:32px;height:32px;background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 100%);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:18px;color:white}.logo-text h1{font-size:20px;font-weight:600;margin:0}.logo-text p{font-size:12px;color:#94a3b8;margin:0}.header-status{display:flex;gap:16px;align-items:center;font-size:12px}.status-badge{background:rgba(59,130,246,0.1);border:1px solid #3b82f6;padding:6px 12px;border-radius:6px;color:#93c5fd}.status-badge.processing{background:rgba(245,158,11,0.1);border-color:#f59e0b;color:#fbbf24}.main-content{flex:1;max-width:1400px;width:100%;margin:0 auto;padding:24px}.view-container{display:none}.view-container.active{display:block}.home-view{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}.room-card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:20px;cursor:pointer;transition:all .3s ease}.room-card:hover{border-color:#64748b;background:#334155;box-shadow:0 8px 16px rgba(0,0,0,.4);transform:translateY(-2px)}.room-number{font-size:28px;font-weight:700;background:linear-gradient(135deg,#3b82f6,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:8px}.room-title{font-size:18px;font-weight:600;margin-bottom:4px}.room-subtitle{font-size:12px;color:#94a3b8;margin-bottom:16px}.room-status{background:rgba(34,197,94,0.1);border:1px solid #22c55e;color:#86efac;padding:8px 12px;border-radius:6px;font-size:12px;font-weight:600;display:inline-block;margin-bottom:12px}.room-status.pending{background:rgba(168,85,247,0.1);border-color:#a855f7;color:#d8b4fe}.room-status.empty{background:rgba(107,114,128,0.1);border-color:#6b7280;color:#d1d5db}.room-info{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;font-size:13px}.info-block{display:flex;flex-direction:column;gap:4px}.info-label{color:#94a3b8;font-size:11px;text-transform:uppercase}.info-value{font-weight:600;color:#e1e8ed}.room-helpers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}.helper-badge{background:rgba(59,130,246,0.15);border:1px solid #3b82f6;color:#93c5fd;padding:4px 8px;border-radius:4px;font-size:11px}.action-buttons{display:flex;gap:8px}.btn-primary{background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);border:none;color:white;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer;font-size:13px;flex:1}.btn-primary:hover{box-shadow:0 4px 12px rgba(59,130,246,.4);transform:translateY(-1px)}.room-interior{display:grid;grid-template-columns:1fr 300px;gap:20px;height:calc(100vh - 180px)}.main-panel{display:flex;flex-direction:column;background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden}.tabs{display:flex;border-bottom:1px solid #334155;background:#0f172a;overflow-x:auto}.tab-button{flex:1;padding:12px 16px;background:none;border:none;color:#94a3b8;font-weight:600;cursor:pointer;font-size:14px;position:relative;white-space:nowrap;min-width:80px}.tab-button.active{color:#3b82f6}.tab-button.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#3b82f6}.tab-content{flex:1;overflow-y:auto;display:none;flex-direction:column;padding:16px;gap:12px}.tab-content.active{display:flex}.code-viewer{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;max-height:200px;overflow-y:auto;font-family:'Monaco','Courier New',monospace;font-size:12px;color:#cbd5e1;line-height:1.4;flex-shrink:0}.schedule-info{background:rgba(59,130,246,0.1);border:1px solid #3b82f6;border-radius:8px;padding:12px;font-size:13px;flex-shrink:0}.run-now-btn{background:linear-gradient(135deg,#10b981 0%,#059669 100%);border:none;color:white;padding:12px 20px;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;width:100%;flex-shrink:0}.run-now-btn:hover:not(:disabled){box-shadow:0 4px 12px rgba(16,185,129,.4)}.run-now-btn:disabled{background:rgba(245,158,11,.8);cursor:not-allowed;opacity:.8}.output-section{flex:1;display:flex;flex-direction:column;gap:12px;overflow-y:auto}.status-box,.progress-container{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;flex-shrink:0}.status-title{font-size:12px;color:#94a3b8;text-transform:uppercase;margin-bottom:6px;font-weight:600}.status-value{font-size:18px;font-weight:700;color:#e1e8ed}.progress-bar{width:100%;height:8px;background:#334155;border-radius:4px;overflow:hidden;margin-top:8px}.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);width:0%;transition:width .3s ease;border-radius:4px}.progress-fill.animating{animation:progressAnimation 2s ease-in-out infinite}@keyframes progressAnimation{0%{width:20%}50%{width:60%}100%{width:20%}}.results-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;flex-shrink:0}.result-item{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;text-align:center}.result-label{font-size:11px;color:#94a3b8;text-transform:uppercase;margin-bottom:4px}.result-value{font-size:16px;font-weight:700;color:#e1e8ed}.email-log,.relay-log,.execution-history{display:flex;flex-direction:column;gap:12px;flex:1;overflow-y:auto}.email-item,.relay-item,.execution-item{background:#0f172a;border:1px solid #334155;border-radius:8px;padding:12px;flex-shrink:0}.email-header,.relay-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:8px}.email-time,.relay-time{font-size:13px;font-weight:600;color:#3b82f6}.relay-time{color:#a855f7}.email-status,.relay-badge{display:inline-block;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;background:rgba(34,197,94,.2);color:#86efac;border:1px solid #22c55e}.relay-badge{background:rgba(168,85,247,.2);color:#d8b4fe;border-color:#a855f7}.email-to,.email-subject{font-size:12px;color:#cbd5e1;margin-bottom:6px}.email-preview{font-size:11px;color:#94a3b8;background:rgba(59,130,246,.05);padding:6px 8px;border-radius:4px;border-left:2px solid #3b82f6}.relay-transition{font-size:12px;color:#cbd5e1;margin-bottom:8px;display:flex;align-items:center;gap:8px}.relay-transition .from,.relay-transition .to{padding:2px 6px;border-radius:3px;font-weight:600;font-size:11px}.relay-transition .from{background:rgba(239,68,68,.1);border:1px solid #ef4444;color:#fca5a5}.relay-transition .to{background:rgba(34,197,94,.1);border:1px solid #22c55e;color:#86efac}.relay-transition .arrow{color:#94a3b8;font-weight:600}.relay-detail,.execution-detail{font-size:11px;color:#94a3b8;display:grid;grid-template-columns:1fr 1fr;gap:8px}.relay-detail-item,.execution-detail-item{background:rgba(59,130,246,.1);padding:6px 8px;border-radius:4px;border:1px solid rgba(59,130,246,.2)}.relay-detail-label,.execution-detail-label{font-size:10px;color:#94a3b8;text-transform:uppercase}.relay-detail-value,.execution-detail-value{font-weight:600;color:#e1e8ed;margin-top:2px}.execution-time{font-size:13px;font-weight:600;color:#3b82f6;margin-bottom:4px}.execution-status{display:inline-block;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px;margin-bottom:8px;background:rgba(34,197,94,.2);color:#86efac;border:1px solid #22c55e}.empty-state{text-align:center;padding:20px;color:#94a3b8;font-size:14px}.ai-panel{display:flex;flex-direction:column;background:#1e293b;border:1px solid #334155;border-radius:12px;overflow:hidden}.ai-header{padding:12px;border-bottom:1px solid #334155;background:#0f172a;font-size:12px;font-weight:600;color:#94a3b8;text-transform:uppercase}.ai-helpers{display:flex;flex-wrap:wrap;gap:5px;padding:8px;flex-shrink:0}.ai-box{background:#0f172a;border:1px solid #334155;border-radius:4px;padding:6px;font-size:11px;text-align:center;flex:1;min-width:60px;color:#93c5fd}.ai-box.active{background:rgba(59,130,246,.2);border-color:#3b82f6;color:#60a5fa;font-weight:600}.messages-area{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px}.message{padding:8px 10px;border-radius:6px;font-size:12px;line-height:1.4;animation:slideIn .3s ease}@keyframes slideIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.message.user{background:#3b82f6;color:white;align-self:flex-end;max-width:85%}.message.assistant{background:#0f172a;color:#cbd5e1;border:1px solid #334155;align-self:flex-start;max-width:85%}.message.system{background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid #f59e0b;text-align:center;align-self:center;font-size:11px}.message.handoff{background:rgba(168,85,247,.1);color:#d8b4fe;border:1px solid #a855f7;font-weight:600;text-align:center}.input-area{padding:12px;border-top:1px solid #334155;display:flex;gap:8px;flex-shrink:0}.message-input{flex:1;background:#0f172a;border:1px solid #334155;color:#e1e8ed;padding:8px 12px;border-radius:6px;font-family:inherit;font-size:12px;resize:none;max-height:60px}.message-input:focus{outline:none;border-color:#3b82f6;background:#1e293b}.send-btn{background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);border:none;color:white;padding:8px 16px;border-radius:6px;font-weight:600;cursor:pointer;font-size:12px;flex-shrink:0}.send-btn:hover{box-shadow:0 4px 12px rgba(59,130,246,.4)}.back-btn{background:transparent;border:1px solid #475569;color:#cbd5e1;padding:8px 12px;border-radius:6px;font-weight:500;cursor:pointer;font-size:13px;margin-bottom:16px}.back-btn:hover{background:rgba(71,85,105,.3);border-color:#64748b}::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:#0f172a}::-webkit-scrollbar-thumb{background:#334155;border-radius:3px}::-webkit-scrollbar-thumb:hover{background:#475569}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .home-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .room-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .room-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .room-card h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .card-stat {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-stat:last-child {
+            border-bottom: none;
+        }
+
+        .card-stat label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .card-stat value {
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .ai-helpers {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+
+        .ai-helpers label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        .helpers-list {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .helper-badge {
+            background: #667eea;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+        }
+
+        .relay-indicator {
+            margin-top: 10px;
+            padding: 8px;
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .relay-indicator em {
+            color: #ff6b6b;
+            font-weight: bold;
+        }
+
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 15px;
+            width: 100%;
+            transition: background 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: #5568d3;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .room-view {
+            display: none;
+            background: white;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .room-view.active {
+            display: block;
+        }
+
+        .room-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 15px;
+        }
+
+        .room-header h2 {
+            color: #667eea;
+            font-size: 2em;
+        }
+
+        .back-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.95em;
+        }
+
+        .back-btn:hover {
+            background: #5568d3;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #eee;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 20px;
+            cursor: pointer;
+            font-size: 1em;
+            color: #999;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover {
+            color: #667eea;
+        }
+
+        .tab-btn.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .code-section {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+
+        .code-section textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.95em;
+            min-height: 100px;
+        }
+
+        .execution-log {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 10px;
+            background: white;
+            border-left: 4px solid #667eea;
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+
+        .log-entry:last-child {
+            margin-bottom: 0;
+        }
+
+        .log-entry-time {
+            font-size: 0.85em;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .log-entry-detail {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95em;
+            margin: 3px 0;
+        }
+
+        .log-entry-detail label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .log-entry-detail value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .email-item {
+            background: #f5f5f5;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            margin-bottom: 15px;
+            border-radius: 3px;
+        }
+
+        .email-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .email-to {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .email-time {
+            font-size: 0.85em;
+            color: #999;
+        }
+
+        .email-subject {
+            font-weight: 600;
+            color: #667eea;
+            margin: 8px 0;
+        }
+
+        .email-preview {
+            color: #666;
+            font-size: 0.95em;
+            margin: 8px 0;
+        }
+
+        .email-status {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+
+        .relay-event {
+            background: #f0f3ff;
+            padding: 15px;
+            border-left: 4px solid #667eea;
+            margin-bottom: 15px;
+            border-radius: 3px;
+        }
+
+        .relay-event:last-child {
+            margin-bottom: 0;
+        }
+
+        .relay-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .relay-arrow {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .relay-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+            font-size: 0.9em;
+        }
+
+        .relay-detail {
+            background: white;
+            padding: 8px;
+            border-radius: 3px;
+        }
+
+        .relay-detail-label {
+            color: #999;
+            font-size: 0.85em;
+            margin-bottom: 3px;
+        }
+
+        .relay-detail-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .stat-card-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-card-title .ai-name {
+            background: #667eea;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .context-bar {
+            background: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+
+        .context-fill {
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            height: 100%;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75em;
+            font-weight: bold;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
-    <div class="app-container">
-        <header><div class="header-content"><div class="logo"><div class="logo-icon">🚀</div><div class="logo-text"><h1>Multi-Room Platform</h1><p>Stage 2A Part 2 [FIXED]</p></div></div><div class="header-status"><div class="status-badge" id="systemStatus">✓ Ready</div></div></div></header>
-        <div class="main-content">
-            <div class="view-container active" id="homeView">
-                <div class="home-view">
-                    <div class="room-card" onclick="enterRoom(1)"><div class="room-number">01</div><div class="room-title">🎯 Job Search</div><div class="room-subtitle">Career Scout</div><div class="room-status">Active</div><div class="room-info"><div class="info-block"><div class="info-label">Last Run</div><div class="info-value" id="room1LastRun">Never</div></div><div class="info-block"><div class="info-label">Emails Sent</div><div class="info-value" id="room1Emails">0</div></div></div><div class="room-helpers"><div class="helper-badge">Claude</div><div class="helper-badge">ChatGPT</div><div class="helper-badge">DeepSeek</div><div class="helper-badge">Mistral</div></div><div class="action-buttons"><button class="btn-primary" onclick="enterRoom(1)">Enter</button></div></div>
-                    <div class="room-card" onclick="enterRoom(2)"><div class="room-number">02</div><div class="room-title">📚 Learning</div><div class="room-subtitle">Skill Hub</div><div class="room-status pending">Pending</div><div class="room-info"><div class="info-block"><div class="info-label">Last Run</div><div class="info-value" id="room2LastRun">Never</div></div><div class="info-block"><div class="info-label">Emails Sent</div><div class="info-value" id="room2Emails">0</div></div></div><div class="room-helpers"><div class="helper-badge">Gemini</div><div class="helper-badge">Claude</div><div class="helper-badge">Perplexity</div><div class="helper-badge">Mistral</div></div><div class="action-buttons"><button class="btn-primary" onclick="enterRoom(2)">Enter</button></div></div>
-                    <div class="room-card" onclick="enterRoom(3)"><div class="room-number">03</div><div class="room-title">➕ Available</div><div class="room-subtitle">New Project</div><div class="room-status empty">Empty</div><div class="room-info"><div class="info-block"><div class="info-label">Last Run</div><div class="info-value">-</div></div><div class="info-block"><div class="info-label">Emails</div><div class="info-value">0</div></div></div><div class="room-helpers"><div class="helper-badge">Not Configured</div></div><div class="action-buttons"><button class="btn-primary" onclick="enterRoom(3)">Enter</button></div></div>
-                </div>
-            </div>
-            <div class="view-container" id="roomView">
-                <button class="back-btn" onclick="backToHome()">← Back</button>
-                <div class="room-interior">
-                    <div class="main-panel">
-                        <div class="tabs"><button class="tab-button active" onclick="switchTab(event,'code')">CODE</button><button class="tab-button" onclick="switchTab(event,'output')">OUTPUT</button><button class="tab-button" onclick="switchTab(event,'emails')">📧 EMAILS</button><button class="tab-button" onclick="switchTab(event,'relay')">🔄 RELAY</button><button class="tab-button" onclick="switchTab(event,'history')">HISTORY</button></div>
-                        <div id="code-tab" class="tab-content active"><div class="code-viewer"><div class="code-line">def search_jobs():</div><div class="code-line">    companies = [...]</div><div class="code-line">    for c in companies:</div><div class="code-line">        jobs = search(c)</div></div><div class="schedule-info"><strong>📅 6:00 AM IST</strong><br><strong>Last:</strong> <span id="lastRunTime">Not run</span></div><button class="run-now-btn" onclick="executeRoom()" id="runBtn">▶ RUN</button></div>
-                        <div id="output-tab" class="tab-content"><div class="output-section"><div class="status-box"><div class="status-title">Status</div><div class="status-value" id="executionStatus">Ready</div></div><div class="progress-container"><div class="status-title">Progress</div><div class="progress-bar"><div class="progress-fill" id="progressBar"></div></div></div><div class="results-grid"><div class="result-item"><div class="result-label">Jobs</div><div class="result-value" id="jobsFound">0</div></div><div class="result-item"><div class="result-label">Match</div><div class="result-value" id="highMatch">0</div></div><div class="result-item"><div class="result-label">Emails</div><div class="result-value" id="emailsReady">0</div></div><div class="result-item"><div class="result-label">Status</div><div class="result-value" id="reportStatus">Pending</div></div></div></div></div>
-                        <div id="emails-tab" class="tab-content"><div class="email-log" id="emailLog"><div class="empty-state">No emails. Execute to generate.</div></div></div>
-                        <div id="relay-tab" class="tab-content"><div class="relay-log" id="relayLog"><div class="empty-state">No relays. Chat 20+ to trigger.</div></div></div>
-                        <div id="history-tab" class="tab-content"><div class="execution-history" id="executionHistory"><div class="empty-state">No executions. Click RUN.</div></div></div>
-                    </div>
-                    <div class="ai-panel"><div class="ai-header">🤖 AI</div><div class="ai-helpers"><div class="ai-box active" data-ai="Claude">Claude</div><div class="ai-box" data-ai="ChatGPT">ChatGPT</div><div class="ai-box" data-ai="DeepSeek">DeepSeek</div><div class="ai-box" data-ai="Mistral">Mistral</div></div><div class="messages-area" id="messagesArea"></div><div class="input-area"><textarea class="message-input" id="messageInput" placeholder="Ask..." rows="1"></textarea><button class="send-btn" onclick="sendMessage()">Send</button></div></div>
-                </div>
-            </div>
+    <div class="container">
+        <header>
+            <h1>🎯 Multi-Room Platform</h1>
+            <p>AI Helper Relay System - Session 3: Relay Logging Enhancement</p>
+        </header>
+
+        <!-- HOME VIEW -->
+        <div id="homeView" class="home-view">
+            <!-- Rooms will be generated by JavaScript -->
+        </div>
+
+        <!-- ROOM VIEWS -->
+        <div id="roomViews">
+            <!-- Room views will be generated by JavaScript -->
         </div>
     </div>
+
     <script>
-        const createRoom=(id,title,helpers)=>({id,title,status:id===1?'active':id===2?'pending':'empty',helpers,currentAI:helpers[0]||null,messageCount:0,lastRun:null,emailsSent:0,executions:[],emails:[],relayEvents:[]});
-        const appState={currentView:'home',currentRoom:null,rooms:{1:createRoom(1,'🎯 Job Search',['Claude','ChatGPT','DeepSeek','Mistral']),2:createRoom(2,'📚 Learning',['Gemini','Claude','Perplexity','Mistral']),3:createRoom(3,'➕ Available',[])},messages:{1:[],2:[],3:[]}};
-        function saveState(){try{localStorage.setItem('appState',JSON.stringify(appState))}catch(e){console.error('Save:',e)}}
-        function loadState(){try{const saved=localStorage.getItem('appState');if(!saved)return;const loaded=JSON.parse(saved);Object.assign(appState,loaded);for(let i=1;i<=3;i++){const r=appState.rooms[i];if(!Array.isArray(r.executions))r.executions=[];if(!Array.isArray(r.emails))r.emails=[];if(!Array.isArray(r.relayEvents))r.relayEvents=[];if(typeof r.emailsSent!=='number')r.emailsSent=0;if(!Array.isArray(appState.messages[i]))appState.messages[i]=[];}}catch(e){console.error('Load:',e);localStorage.removeItem('appState')}}
-        function init(){try{loadState();updateHomeView();addMessageListeners()}catch(e){console.error('Init:',e)}}
-        function enterRoom(id){try{appState.currentRoom=id;showView('roomView');updateRoomView()}catch(e){console.error('Enter:',e)}}
-        function backToHome(){try{appState.currentRoom=null;showView('homeView');updateHomeView()}catch(e){console.error('Back:',e)}}
-        function showView(id){document.querySelectorAll('.view-container').forEach(e=>e.classList.remove('active'));const t=document.getElementById(id);if(t)t.classList.add('active')}
-        function updateHomeView(){try{for(let i=1;i<=3;i++){const r=appState.rooms[i],l=document.getElementById(`room${i}LastRun`),e=document.getElementById(`room${i}Emails`);if(l)l.textContent=r.lastRun?formatTime(r.lastRun):'Never';if(e)e.textContent=(r.emailsSent||0).toString()}}catch(e){console.error('UpdateHome:',e)}}
-        function updateRoomView(){try{const r=appState.rooms[appState.currentRoom];if(!r)return;const m=document.getElementById('messagesArea');if(m){m.innerHTML='';(appState.messages[appState.currentRoom]||[]).forEach(msg=>{const el=document.createElement('div');el.className=`message ${msg.type}`;el.textContent=msg.text;m.appendChild(el)});m.scrollTop=m.scrollHeight}updateExecutionHistory();updateEmailLog();updateRelayLog()}catch(e){console.error('UpdateRoom:',e)}}
-        function switchTab(e,tab){try{e.target.parentElement.querySelectorAll('.tab-button').forEach(b=>b.classList.remove('active'));e.target.classList.add('active');document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));const target=document.getElementById(`${tab}-tab`);if(target)target.classList.add('active')}catch(err){console.error('Tab:',err)}}
-        function executeRoom(){try{const r=appState.rooms[appState.currentRoom];if(!r)return;const btn=document.getElementById('runBtn');if(btn){btn.disabled=true;btn.textContent='⏳'}const pf=document.getElementById('progressBar');if(pf)pf.classList.add('animating');updateSystemStatus('processing');setTimeout(()=>completeExecution(),2000)}catch(e){console.error('Execute:',e)}}
-        function completeExecution(){try{const r=appState.rooms[appState.currentRoom];if(!r)return;const jf=Math.floor(Math.random()*45)+15,hm=Math.floor(Math.random()*12)+3;const ex={timestamp:new Date().toISOString(),jobsFound:jf,highMatch:hm,duration:'2m 34s'};r.executions.push(ex);r.lastRun=new Date();r.emailsSent+=hm;for(let i=0;i<hm;i++)r.emails.push({timestamp:new Date().toISOString(),to:'shashikant15041982@gmail.com',subject:`Job #${hm-i}`,preview:'Matching opportunity...',status:'sent'});document.getElementById('executionStatus').textContent='✓';document.getElementById('jobsFound').textContent=jf;document.getElementById('highMatch').textContent=hm;document.getElementById('emailsReady').textContent=hm;document.getElementById('reportStatus').textContent='Sent';document.getElementById('lastRunTime').textContent=formatTime(r.lastRun);const pf=document.getElementById('progressBar');if(pf){pf.classList.remove('animating');pf.style.width='100%'}const btn=document.getElementById('runBtn');if(btn){btn.disabled=false;btn.textContent='▶ RUN'}const m=document.getElementById('messagesArea');if(m){const el=document.createElement('div');el.className='message system';el.textContent=`✓ ${jf} jobs, ${hm} emails`;m.appendChild(el);m.scrollTop=m.scrollHeight}updateSystemStatus('ready');saveState();updateHomeView();updateEmailLog();updateExecutionHistory()}catch(e){console.error('Complete:',e)}}
-        function updateEmailLog(){try{const r=appState.rooms[appState.currentRoom],c=document.getElementById('emailLog');if(!c||!r)return;if(!Array.isArray(r.emails)||r.emails.length===0){c.innerHTML='<div class="empty-state">No emails</div>';return}c.innerHTML=r.emails.map(e=>`<div class="email-item"><div class="email-header"><div class="email-time">${formatTime(new Date(e.timestamp))}</div><div class="email-status">SENT</div></div><div class="email-to"><strong>To:</strong> ${e.to}</div><div class="email-subject"><strong>Subject:</strong> ${e.subject}</div><div class="email-preview">${e.preview}</div></div>`).join('')}catch(e){console.error('EmailLog:',e)}}
-        function updateRelayLog(){try{const r=appState.rooms[appState.currentRoom],c=document.getElementById('relayLog');if(!c||!r)return;if(!Array.isArray(r.relayEvents)||r.relayEvents.length===0){c.innerHTML='<div class="empty-state">No relays</div>';return}c.innerHTML=r.relayEvents.map(e=>`<div class="relay-item"><div class="relay-header"><div class="relay-time">${formatTime(new Date(e.timestamp))}</div><div class="relay-badge">RELAY</div></div><div class="relay-transition"><span class="from">${e.fromAI}</span><span class="arrow">→</span><span class="to">${e.toAI}</span></div></div>`).join('')}catch(e){console.error('RelayLog:',e)}}
-        function updateExecutionHistory(){try{const r=appState.rooms[appState.currentRoom],c=document.getElementById('executionHistory');if(!c||!r)return;if(!Array.isArray(r.executions)||r.executions.length===0){c.innerHTML='<div class="empty-state">No executions</div>';return}c.innerHTML=r.executions.map(e=>`<div class="execution-item"><div class="execution-time">${formatTime(new Date(e.timestamp))}</div><div class="execution-status">✓ SUCCESS</div><div class="execution-detail"><div class="execution-detail-item"><div class="execution-detail-label">Jobs</div><div class="execution-detail-value">${e.jobsFound}</div></div><div class="execution-detail-item"><div class="execution-detail-label">Match</div><div class="execution-detail-value">${e.highMatch}</div></div></div></div>`).join('')}catch(e){console.error('History:',e)}}
-        function addMessageListeners(){const i=document.getElementById('messageInput');if(i)i.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage()}})}
-        function sendMessage(){try{const i=document.getElementById('messageInput'),t=i.value.trim();if(!t)return;const r=appState.rooms[appState.currentRoom];if(!r)return;appState.messages[appState.currentRoom].push({type:'user',text:t});r.messageCount++;i.value='';const m=document.getElementById('messagesArea');if(m){const el=document.createElement('div');el.className='message user';el.textContent=t;m.appendChild(el);m.scrollTop=m.scrollHeight}setTimeout(()=>{const resp=getAIResponse(t);appState.messages[appState.currentRoom].push({type:'assistant',text:resp});if(m){const el=document.createElement('div');el.className='message assistant';el.textContent=resp;m.appendChild(el);if(appState.messages[appState.currentRoom].length>20)triggerRelay();m.scrollTop=m.scrollHeight}saveState()},500);saveState()}catch(e){console.error('Send:',e)}}
-        function getAIResponse(){const responses=['Great question!','I understand.','Based on that...','Interesting!','Can help!','Good point!'];return responses[Math.floor(Math.random()*responses.length)]}
-        function triggerRelay(){try{const r=appState.rooms[appState.currentRoom];if(!r||!r.helpers.length)return;const hIdx=r.helpers.indexOf(r.currentAI),nIdx=(hIdx+1)%r.helpers.length,nAI=r.helpers[nIdx],pAI=r.currentAI;r.currentAI=nAI;r.relayEvents.push({timestamp:new Date().toISOString(),fromAI:pAI,toAI:nAI,messageCount:appState.messages[appState.currentRoom].length});const m=document.getElementById('messagesArea');if(m){const el=document.createElement('div');el.className='message handoff';el.textContent=`🔄 ${pAI}→${nAI}`;m.appendChild(el);m.scrollTop=m.scrollHeight}document.querySelectorAll('.ai-box').forEach(b=>b.classList.remove('active'));const ab=document.querySelector(`[data-ai="${nAI}"]`);if(ab)ab.classList.add('active');saveState();updateRelayLog()}catch(e){console.error('Relay:',e)}}
-        function formatTime(d){if(!d)return 'Never';const date=typeof d==='string'?new Date(d):d;return date.toLocaleDateString()+' '+date.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
-        function updateSystemStatus(s){const b=document.getElementById('systemStatus');if(b)b.textContent=s==='processing'?'⏳ Processing':'✓ Ready'}
-        window.addEventListener('DOMContentLoaded',init);
+        // ====== INITIALIZATION & DATA MANAGEMENT ======
+
+        const ROOMS = {
+            1: { title: 'Room 1', helpers: ['Claude', 'ChatGPT', 'DeepSeek', 'Mistral'] },
+            2: { title: 'Room 2', helpers: ['Claude', 'ChatGPT', 'DeepSeek', 'Mistral'] },
+            3: { title: 'Room 3', helpers: ['Claude', 'ChatGPT', 'DeepSeek', 'Mistral'] }
+        };
+
+        function initializeAppState() {
+            try {
+                const existing = localStorage.getItem('appState');
+                if (existing) {
+                    const state = JSON.parse(existing);
+                    // Auto-migrate for missing new fields
+                    Object.keys(ROOMS).forEach(roomId => {
+                        if (!state.rooms[roomId]) {
+                            state.rooms[roomId] = createRoomState(roomId);
+                        }
+                        if (!state.rooms[roomId].emails) state.rooms[roomId].emails = [];
+                        if (!state.rooms[roomId].relayEvents) state.rooms[roomId].relayEvents = [];
+                        if (!state.rooms[roomId].emailsSent) state.rooms[roomId].emailsSent = 0;
+                        if (!state.rooms[roomId].relayStats) state.rooms[roomId].relayStats = {};
+                    });
+                    if (!state.messages) state.messages = {};
+                    localStorage.setItem('appState', JSON.stringify(state));
+                    return state;
+                }
+            } catch (e) {
+                console.error('Error loading state:', e);
+            }
+
+            return createInitialState();
+        }
+
+        function createRoomState(roomId) {
+            return {
+                id: parseInt(roomId),
+                title: ROOMS[roomId].title,
+                status: 'empty',
+                helpers: ROOMS[roomId].helpers,
+                currentAI: ROOMS[roomId].helpers[0],
+                messageCount: 0,
+                lastRun: null,
+                emailsSent: 0,
+                executions: [],
+                emails: [],
+                relayEvents: [],
+                relayStats: {}
+            };
+        }
+
+        function createInitialState() {
+            const state = { rooms: {}, messages: {} };
+            Object.keys(ROOMS).forEach(roomId => {
+                state.rooms[roomId] = createRoomState(roomId);
+                state.messages[roomId] = [];
+            });
+            localStorage.setItem('appState', JSON.stringify(state));
+            return state;
+        }
+
+        function getAppState() {
+            try {
+                return JSON.parse(localStorage.getItem('appState')) || createInitialState();
+            } catch (e) {
+                console.error('Error parsing app state:', e);
+                return createInitialState();
+            }
+        }
+
+        function saveAppState(state) {
+            try {
+                localStorage.setItem('appState', JSON.stringify(state));
+            } catch (e) {
+                console.error('Error saving app state:', e);
+            }
+        }
+
+        // ====== CONTEXT SIZE CALCULATION ======
+
+        function estimateContextSize(messages) {
+            try {
+                if (!Array.isArray(messages)) return 0;
+                // Rough estimation: ~4 bytes per character
+                let totalChars = messages.reduce((sum, msg) => {
+                    return sum + (msg.text ? msg.text.length : 0);
+                }, 0);
+                return Math.round(totalChars / 240); // Convert to KB (rough estimate)
+            } catch (e) {
+                console.error('Error estimating context:', e);
+                return 0;
+            }
+        }
+
+        // ====== RELAY STATS SYSTEM ======
+
+        function updateRelayStats(state, roomId, fromAI, toAI, messageCount, contextKB) {
+            try {
+                const room = state.rooms[roomId];
+                if (!room.relayStats) room.relayStats = {};
+
+                [fromAI, toAI].forEach(aiName => {
+                    if (!room.relayStats[aiName]) {
+                        room.relayStats[aiName] = {
+                            handoffs: 0,
+                            messagesHandled: 0,
+                            totalContextKB: 0
+                        };
+                    }
+                });
+
+                room.relayStats[fromAI].handoffs += 1;
+                room.relayStats[fromAI].messagesHandled += messageCount;
+                room.relayStats[fromAI].totalContextKB += contextKB;
+
+                room.relayStats[toAI].messagesHandled = Math.max(
+                    room.relayStats[toAI].messagesHandled,
+                    messageCount
+                );
+            } catch (e) {
+                console.error('Error updating relay stats:', e);
+            }
+        }
+
+        // ====== EXECUTION & RELAY LOGIC ======
+
+        function completeExecution(roomId) {
+            try {
+                const state = getAppState();
+                const room = state.rooms[roomId];
+
+                if (!room) return;
+
+                const jobsFound = Math.floor(Math.random() * 20) + 1;
+                const highMatch = Math.floor(jobsFound * Math.random() * 0.5);
+                const timestamp = new Date().toISOString();
+
+                // Initialize arrays if missing
+                if (!room.executions) room.executions = [];
+                if (!room.emails) room.emails = [];
+                if (!room.relayEvents) room.relayEvents = [];
+
+                // Add execution
+                room.executions.push({
+                    timestamp,
+                    jobsFound,
+                    highMatch,
+                    duration: 2
+                });
+
+                // Generate emails
+                if (highMatch > 0) {
+                    for (let i = 0; i < highMatch; i++) {
+                        const companies = ['Accenture', 'Deloitte', 'TCS', 'Cognizant', 'Capgemini'];
+                        const company = companies[Math.floor(Math.random() * companies.length)];
+                        room.emails.push({
+                            timestamp,
+                            to: 'shashikant15041982@gmail.com',
+                            subject: `Job Match: R2R Lead at ${company}`,
+                            preview: `New R2R opportunity at ${company} - Salary: 12-15 LPA`,
+                            status: 'SENT'
+                        });
+                    }
+                    room.emailsSent = (room.emailsSent || 0) + highMatch;
+                }
+
+                // Increment message count and check for relay
+                room.messageCount = (room.messageCount || 0) + 1;
+                room.lastRun = timestamp;
+                room.status = 'active';
+
+                if (room.messageCount > 20 && room.messageCount % 20 === 1) {
+                    const helpers = room.helpers;
+                    const currentIndex = helpers.indexOf(room.currentAI);
+                    const nextIndex = (currentIndex + 1) % helpers.length;
+                    const fromAI = room.currentAI;
+                    const toAI = helpers[nextIndex];
+
+                    const contextKB = estimateContextSize(state.messages[roomId]);
+
+                    room.relayEvents.push({
+                        timestamp,
+                        fromAI,
+                        toAI,
+                        messageCount: room.messageCount,
+                        contextKB
+                    });
+
+                    updateRelayStats(state, roomId, fromAI, toAI, room.messageCount, contextKB);
+                    room.currentAI = toAI;
+                }
+
+                saveAppState(state);
+                renderUI();
+            } catch (e) {
+                console.error('Error completing execution:', e);
+            }
+        }
+
+        // ====== UI RENDERING ======
+
+        function formatTime(isoString) {
+            try {
+                if (!isoString) return 'Never';
+                const date = typeof isoString === 'string' ? new Date(isoString) : isoString;
+                return date.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit'
+                });
+            } catch (e) {
+                return 'Invalid time';
+            }
+        }
+
+        function renderHomeView() {
+            try {
+                const state = getAppState();
+                const homeView = document.getElementById('homeView');
+                homeView.innerHTML = '';
+
+                Object.keys(ROOMS).forEach(roomId => {
+                    const room = state.rooms[roomId];
+                    const lastRunTime = room.lastRun ? formatTime(room.lastRun) : 'Never';
+                    const relayCount = room.relayEvents ? room.relayEvents.length : 0;
+                    const relayIndicator = relayCount > 0 
+                        ? `<div class="relay-indicator"><em>${relayCount} handoff${relayCount > 1 ? 's' : ''}</em> occurred</div>`
+                        : '';
+
+                    homeView.innerHTML += `
+                        <div class="room-card">
+                            <h2>${room.title}</h2>
+                            <div class="card-stat">
+                                <label>Status:</label>
+                                <value>${room.status.toUpperCase()}</value>
+                            </div>
+                            <div class="card-stat">
+                                <label>Last Run:</label>
+                                <value>${lastRunTime}</value>
+                            </div>
+                            <div class="ai-helpers">
+                                <label>AI Helpers:</label>
+                                <div class="helpers-list">
+                                    ${room.helpers.map(h => 
+                                        `<span class="helper-badge" style="${room.currentAI === h ? 'font-weight: bold;' : ''}">${h}</span>`
+                                    ).join('')}
+                                </div>
+                                <div style="margin-top: 8px; font-size: 0.85em; color: #666;">Current: <strong>${room.currentAI}</strong></div>
+                            </div>
+                            <div class="card-stat">
+                                <label>Emails Sent:</label>
+                                <value>${room.emailsSent || 0}</value>
+                            </div>
+                            ${relayIndicator}
+                            <button class="btn" onclick="enterRoom(${roomId})">Enter Room</button>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error('Error rendering home view:', e);
+            }
+        }
+
+        function renderRoomView(roomId) {
+            try {
+                const state = getAppState();
+                const room = state.rooms[roomId];
+
+                return `
+                    <div id="room-${roomId}" class="room-view">
+                        <div class="room-header">
+                            <h2>${room.title}</h2>
+                            <button class="back-btn" onclick="backToHome()">← Back to Home</button>
+                        </div>
+
+                        <div class="tabs">
+                            <button class="tab-btn active" onclick="switchTab(${roomId}, 'code')">CODE</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'output')">OUTPUT</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'history')">HISTORY</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'emails')">EMAILS</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'relay')">RELAY</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'stats')">RELAY STATS</button>
+                        </div>
+
+                        <!-- CODE TAB -->
+                        <div id="tab-code-${roomId}" class="tab-content active">
+                            <div class="code-section">
+                                <textarea placeholder="Enter your prompt or code here..."></textarea>
+                            </div>
+                            <button class="btn" id="run-btn-${roomId}" onclick="runExecution(${roomId})">▶ RUN NOW</button>
+                        </div>
+
+                        <!-- OUTPUT TAB -->
+                        <div id="tab-output-${roomId}" class="tab-content">
+                            <div style="padding: 20px; background: #f5f5f5; border-radius: 5px;">
+                                Mock response from ${room.currentAI}... Ready to accept more prompts.
+                            </div>
+                        </div>
+
+                        <!-- HISTORY TAB -->
+                        <div id="tab-history-${roomId}" class="tab-content">
+                            <div class="execution-log" id="history-log-${roomId}">
+                                ${room.executions.length === 0 
+                                    ? '<div class="empty-state"><div class="empty-state-icon">📭</div>No executions yet</div>'
+                                    : room.executions.map(exec => `
+                                        <div class="log-entry">
+                                            <div class="log-entry-time">${formatTime(exec.timestamp)}</div>
+                                            <div class="log-entry-detail">
+                                                <label>Jobs Found:</label>
+                                                <value>${exec.jobsFound}</value>
+                                            </div>
+                                            <div class="log-entry-detail">
+                                                <label>High Match:</label>
+                                                <value>${exec.highMatch}</value>
+                                            </div>
+                                            <div class="log-entry-detail">
+                                                <label>Duration:</label>
+                                                <value>${exec.duration}s</value>
+                                            </div>
+                                        </div>
+                                    `).join('')
+                                }
+                            </div>
+                        </div>
+
+                        <!-- EMAILS TAB -->
+                        <div id="tab-emails-${roomId}" class="tab-content">
+                            <div id="emails-list-${roomId}">
+                                ${room.emails.length === 0
+                                    ? '<div class="empty-state"><div class="empty-state-icon">📧</div>No emails sent yet</div>'
+                                    : room.emails.map(email => `
+                                        <div class="email-item">
+                                            <div class="email-header">
+                                                <div class="email-to">${email.to}</div>
+                                                <div class="email-time">${formatTime(email.timestamp)}</div>
+                                            </div>
+                                            <div class="email-subject">${email.subject}</div>
+                                            <div class="email-preview">${email.preview}</div>
+                                            <span class="email-status">${email.status}</span>
+                                        </div>
+                                    `).join('')
+                                }
+                            </div>
+                        </div>
+
+                        <!-- RELAY TAB -->
+                        <div id="tab-relay-${roomId}" class="tab-content">
+                            <div id="relay-list-${roomId}">
+                                ${room.relayEvents.length === 0
+                                    ? '<div class="empty-state"><div class="empty-state-icon">🔄</div>No relay events yet</div>'
+                                    : room.relayEvents.map(event => `
+                                        <div class="relay-event">
+                                            <div class="relay-header">
+                                                <span class="helper-badge">${event.fromAI}</span>
+                                                <span class="relay-arrow">→</span>
+                                                <span class="helper-badge">${event.toAI}</span>
+                                            </div>
+                                            <div class="relay-details">
+                                                <div class="relay-detail">
+                                                    <div class="relay-detail-label">Messages</div>
+                                                    <div class="relay-detail-value">${event.messageCount}</div>
+                                                </div>
+                                                <div class="relay-detail">
+                                                    <div class="relay-detail-label">Context (KB)</div>
+                                                    <div class="relay-detail-value">${event.contextKB}</div>
+                                                </div>
+                                                <div class="relay-detail">
+                                                    <div class="relay-detail-label">Time</div>
+                                                    <div class="relay-detail-value">${formatTime(event.timestamp)}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    `).join('')
+                                }
+                            </div>
+                        </div>
+
+                        <!-- RELAY STATS TAB (NEW - SESSION 3) -->
+                        <div id="tab-stats-${roomId}" class="tab-content">
+                            <div id="stats-container-${roomId}">
+                                ${room.relayStats && Object.keys(room.relayStats).length > 0
+                                    ? Object.keys(room.relayStats).map(aiName => {
+                                        const stats = room.relayStats[aiName];
+                                        const avgContextPerHandoff = stats.handoffs > 0 
+                                            ? Math.round(stats.totalContextKB / stats.handoffs)
+                                            : 0;
+                                        const contextPercent = Math.min(100, Math.round((stats.totalContextKB / 10000) * 100));
+                                        return `
+                                            <div class="stat-card">
+                                                <div class="stat-card-title">
+                                                    <span class="ai-name">${aiName}</span>
+                                                </div>
+                                                <div class="stat-row">
+                                                    <span class="stat-label">Handoffs:</span>
+                                                    <span class="stat-value">${stats.handoffs}</span>
+                                                </div>
+                                                <div class="stat-row">
+                                                    <span class="stat-label">Messages Handled:</span>
+                                                    <span class="stat-value">${stats.messagesHandled}</span>
+                                                </div>
+                                                <div class="stat-row">
+                                                    <span class="stat-label">Total Context (KB):</span>
+                                                    <span class="stat-value">${stats.totalContextKB}</span>
+                                                </div>
+                                                <div class="stat-row">
+                                                    <span class="stat-label">Avg Context/Handoff (KB):</span>
+                                                    <span class="stat-value">${avgContextPerHandoff}</span>
+                                                </div>
+                                                <div style="margin-top: 10px;">
+                                                    <div class="context-bar">
+                                                        <div class="context-fill" style="width: ${contextPercent}%">
+                                                            ${contextPercent > 10 ? contextPercent + '%' : ''}
+                                                        </div>
+                                                    </div>
+                                                    <div style="font-size: 0.8em; color: #999; margin-top: 5px;">Context utilization</div>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')
+                                    : '<div class="empty-state"><div class="empty-state-icon">📊</div>No relay statistics yet</div>'
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Error rendering room view:', e);
+                return '<div class="room-view"><p>Error loading room. Please refresh.</p></div>';
+            }
+        }
+
+        function renderUI() {
+            try {
+                renderHomeView();
+
+                const roomViewsContainer = document.getElementById('roomViews');
+                roomViewsContainer.innerHTML = '';
+
+                Object.keys(ROOMS).forEach(roomId => {
+                    roomViewsContainer.innerHTML += renderRoomView(roomId);
+                });
+            } catch (e) {
+                console.error('Error rendering UI:', e);
+            }
+        }
+
+        // ====== NAVIGATION ======
+
+        function enterRoom(roomId) {
+            try {
+                document.getElementById('homeView').style.display = 'none';
+                document.getElementById(`room-${roomId}`).classList.add('active');
+            } catch (e) {
+                console.error('Error entering room:', e);
+            }
+        }
+
+        function backToHome() {
+            try {
+                document.getElementById('homeView').style.display = 'grid';
+                Object.keys(ROOMS).forEach(roomId => {
+                    document.getElementById(`room-${roomId}`).classList.remove('active');
+                });
+            } catch (e) {
+                console.error('Error going back to home:', e);
+            }
+        }
+
+        function switchTab(roomId, tabName) {
+            try {
+                // Hide all tabs for this room
+                const tabButtons = document.querySelectorAll(`#room-${roomId} .tab-btn`);
+                const tabContents = document.querySelectorAll(`#room-${roomId} .tab-content`);
+
+                tabButtons.forEach(btn => btn.classList.remove('active'));
+                tabContents.forEach(content => content.classList.remove('active'));
+
+                // Show selected tab
+                document.querySelector(`#room-${roomId} [onclick*="'${tabName}'"]`).classList.add('active');
+                document.getElementById(`tab-${tabName}-${roomId}`).classList.add('active');
+            } catch (e) {
+                console.error('Error switching tab:', e);
+            }
+        }
+
+        // ====== EXECUTION ======
+
+        function runExecution(roomId) {
+            try {
+                const btn = document.getElementById(`run-btn-${roomId}`);
+                btn.disabled = true;
+
+                setTimeout(() => {
+                    completeExecution(roomId);
+                    btn.disabled = false;
+                }, 2000);
+            } catch (e) {
+                console.error('Error running execution:', e);
+            }
+        }
+
+        // ====== INITIALIZATION ======
+
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                initializeAppState();
+                renderUI();
+            } catch (e) {
+                console.error('Error initializing app:', e);
+            }
+        });
     </script>
 </body>
 </html>

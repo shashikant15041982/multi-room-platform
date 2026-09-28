@@ -54,24 +54,28 @@
 
 ---
 
-## ⏳ PENDING SESSIONS
-
-### Session 3: Relay Logging Enhancement (NEXT) ⏳
-**Stage:** 2B  
-**Target Date:** 2026-09-28 (after 6-hour buffer)  
-**Features to Build:**
-- [ ] Context size tracking (estimated KB per relay)
-- [ ] RELAY STATS tab (per-AI statistics)
-- [ ] Per-AI metrics: handoffs, messages handled, context used
-- [ ] Enhanced relay timeline (with KB + timestamp)
-- [ ] Home page relay indicators
-- [ ] Relay statistics aggregation
+### Session 3: Relay Logging Enhancement ✅
+**File:** `index.html` (updated)  
+**Date:** 2026-09-28  
+**Features Delivered:**
+- [x] Context size tracking (estimated KB per relay)
+- [x] RELAY STATS tab (per-AI statistics)
+- [x] Per-AI metrics: handoffs, messages handled, context used
+- [x] Enhanced relay timeline (with KB + timestamp)
+- [x] Home page relay indicators
+- [x] Relay statistics aggregation
 
 **Testing Checklist:**
-- [ ] Context KB calculation works correctly
-- [ ] RELAY STATS tab displays accurate numbers
-- [ ] Relay timeline shows all details
-- [ ] Home page shows relay count
+- [x] Context KB calculation works correctly
+- [x] RELAY STATS tab displays accurate numbers
+- [x] Relay timeline shows all details
+- [x] Home page shows relay count
+
+**Status:** ✅ Live on GitHub Pages
+
+---
+
+## ⏳ PENDING SESSIONS
 
 ---
 
