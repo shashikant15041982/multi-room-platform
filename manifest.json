@@ -1,0 +1,69 @@
+{
+    "name": "Multi-Room Project Platform",
+    "short_name": "Multi-Room",
+    "description": "AI-powered multi-room project relay system with real-time execution tracking",
+    "start_url": "/app.html",
+    "scope": "/",
+    "display": "standalone",
+    "orientation": "portrait-primary",
+    "background_color": "#ffffff",
+    "theme_color": "#667eea",
+    "icons": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='96' y='96' font-size='100' fill='white' text-anchor='middle' dominant-baseline='central' font-weight='bold'>🚀</text></svg>",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%23667eea' width='512' height='512'/><text x='256' y='256' font-size='280' fill='white' text-anchor='middle' dominant-baseline='central' font-weight='bold'>🚀</text></svg>",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 270 540'><rect fill='%23667eea' width='270' height='540'/><text x='135' y='270' font-size='100' fill='white' text-anchor='middle' dominant-baseline='central'>Multi-Room</text></svg>",
+            "sizes": "270x540",
+            "type": "image/svg+xml",
+            "form_factor": "narrow"
+        },
+        {
+            "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1280 720'><rect fill='%23667eea' width='1280' height='720'/><text x='640' y='360' font-size='100' fill='white' text-anchor='middle' dominant-baseline='central'>Multi-Room</text></svg>",
+            "sizes": "1280x720",
+            "type": "image/svg+xml",
+            "form_factor": "wide"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Run Execution",
+            "short_name": "Execute",
+            "description": "Quickly run a new execution",
+            "url": "/app.html?action=execute",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%2310b981' width='96' height='96' rx='20'/><text x='48' y='48' font-size='50' fill='white' text-anchor='middle' dominant-baseline='central'>▶</text></svg>",
+                    "sizes": "96x96",
+                    "type": "image/svg+xml"
+                }
+            ]
+        },
+        {
+            "name": "Send Email",
+            "short_name": "Email",
+            "description": "Send an email relay",
+            "url": "/app.html?action=email",
+            "icons": [
+                {
+                    "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%233b82f6' width='96' height='96' rx='20'/><text x='48' y='48' font-size='50' fill='white' text-anchor='middle' dominant-baseline='central'>✉</text></svg>",
+                    "sizes": "96x96",
+                    "type": "image/svg+xml"
+                }
+            ]
+        }
+    ],
+    "categories": ["productivity", "business"],
+    "prefer_related_applications": false
+}
