@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Room Platform - Session 6 (Backend Structure)</title>
+    <title>Multi-Room Platform - Session 7 (OAuth & API Framework)</title>
     <style>
         * {
             margin: 0;
@@ -24,20 +24,173 @@
             margin: 0 auto;
         }
 
+        .login-view {
+            display: none;
+        }
+
+        .login-view.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 1000;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-card h1 {
+            color: #667eea;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 1.8em;
+        }
+
+        .login-card p {
+            color: #666;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 0.95em;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 5px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .oauth-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .oauth-section p {
+            font-size: 0.85em;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .oauth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .oauth-btn {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .oauth-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
         header {
             text-align: center;
             color: white;
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         header h1 {
             font-size: 2.5em;
-            margin-bottom: 10px;
+            margin: 0;
+            flex: 1;
         }
 
         header p {
             font-size: 1.1em;
             opacity: 0.9;
+            margin: 0;
+        }
+
+        .user-menu {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-email {
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .home-view {
@@ -120,7 +273,7 @@
             font-weight: 600;
         }
 
-        .backend-status {
+        .sync-badge {
             display: inline-block;
             background: #10b981;
             color: white;
@@ -129,38 +282,6 @@
             font-size: 0.85em;
             margin-top: 10px;
             font-weight: 600;
-        }
-
-        .backend-status.offline {
-            background: #ef4444;
-        }
-
-        .integrity-badge {
-            display: inline-block;
-            background: #10b981;
-            color: white;
-            padding: 4px 10px;
-            border-radius: 5px;
-            font-size: 0.85em;
-            margin-top: 10px;
-            font-weight: 600;
-        }
-
-        .token-warning {
-            display: inline-block;
-            background: #ef4444;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 5px;
-            font-size: 0.9em;
-            margin-top: 10px;
-            font-weight: 600;
-            animation: pulse 1s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.7; }
         }
 
         .room-views {
@@ -208,12 +329,6 @@
 
         .run-btn:hover:not(:disabled) {
             background: #059669;
-        }
-
-        .run-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            opacity: 0.6;
         }
 
         .tabs {
@@ -314,40 +429,6 @@
             font-weight: bold;
         }
 
-        .api-status-good {
-            background: #f0fdf4;
-            border-left-color: #10b981;
-        }
-
-        .api-status-error {
-            background: #fef2f2;
-            border-left-color: #ef4444;
-        }
-
-        .api-log-item {
-            background: white;
-            padding: 10px;
-            margin: 8px 0;
-            border-left: 4px solid #3b82f6;
-            border-radius: 4px;
-            font-size: 0.9em;
-        }
-
-        .api-log-time {
-            color: #999;
-            font-size: 0.85em;
-        }
-
-        .api-log-success {
-            color: #10b981;
-            font-weight: 600;
-        }
-
-        .api-log-error {
-            color: #ef4444;
-            font-weight: 600;
-        }
-
         .empty-state {
             text-align: center;
             padding: 40px 20px;
@@ -359,9 +440,51 @@
             margin-bottom: 15px;
         }
 
+        .sheets-structure {
+            background: #f0fdf4;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #10b981;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .oauth-status {
+            background: #eff6ff;
+            padding: 15px;
+            border-radius: 5px;
+            border-left: 4px solid #3b82f6;
+            margin: 15px 0;
+        }
+
+        .oauth-status-label {
+            font-weight: 600;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .oauth-status-value {
+            color: #1e40af;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
         @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
             header h1 {
                 font-size: 1.8em;
+            }
+
+            .user-menu {
+                width: 100%;
+                justify-content: center;
             }
 
             .home-view {
@@ -383,14 +506,27 @@
                 padding: 10px 16px;
                 font-size: 0.95em;
             }
+
+            .login-card {
+                padding: 30px 20px;
+                margin: 20px;
+            }
         }
     </style>
 </head>
 <body>
+    <div class="login-view" id="loginView"></div>
+    
     <div class="container">
-        <header>
-            <h1>🚀 Multi-Room Platform</h1>
-            <p>Session 6: Backend Structure & Mock APIs</p>
+        <header id="header" style="display: none;">
+            <div>
+                <h1>🚀 Multi-Room Platform</h1>
+                <p>Session 7: OAuth & API Framework</p>
+            </div>
+            <div class="user-menu">
+                <span class="user-email" id="userEmail"></span>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
         </header>
 
         <div id="homeView" class="home-view"></div>
@@ -398,41 +534,64 @@
     </div>
 
     <script>
-        // ==================== BACKEND CONFIG ====================
-        const BACKEND_CONFIG = {
-            apiBaseUrl: 'mock://backend-api',
-            syncInterval: 5000, // 5 seconds
-            mockApiDelay: 500, // 500ms simulated latency
-            maxRetries: 3
+        // ==================== OAUTH CONFIG ====================
+        const OAUTH_CONFIG = {
+            googleClientId: 'mock-client-id-12345.apps.googleusercontent.com',
+            redirectUri: window.location.href.split('?')[0],
+            scope: 'https://www.googleapis.com/auth/spreadsheets',
+            tokenExpiry: 3600 // 1 hour
         };
 
-        // ==================== API ENDPOINTS ====================
-        const API_ENDPOINTS = {
-            SYNC_DATA: '/v1/sync/room-data',
-            FETCH_DATA: '/v1/fetch/room-data',
-            LOG_RELAY: '/v1/log/relay-handoff',
-            TOKEN_STATUS: '/v1/status/token-usage',
-            SAVE_EXECUTION: '/v1/save/execution',
-            SAVE_EMAIL: '/v1/save/email'
+        const GOOGLE_SHEETS_STRUCTURE = {
+            sheetName: 'Multi-Room-Platform',
+            tables: {
+                rooms: {
+                    name: 'Rooms',
+                    columns: ['room_id', 'title', 'current_ai', 'status', 'executions', 'emails', 'relays', 'last_updated']
+                },
+                executions: {
+                    name: 'Executions',
+                    columns: ['execution_id', 'room_id', 'timestamp', 'jobs_found', 'high_match', 'duration', 'tokens_used']
+                },
+                relays: {
+                    name: 'Relays',
+                    columns: ['relay_id', 'room_id', 'from_ai', 'to_ai', 'message_count', 'context_kb', 'timestamp']
+                },
+                emails: {
+                    name: 'Emails',
+                    columns: ['email_id', 'room_id', 'recipient', 'subject', 'status', 'timestamp']
+                },
+                tokens: {
+                    name: 'TokenHistory',
+                    columns: ['entry_id', 'room_id', 'ai_name', 'tokens_used', 'percent_used', 'timestamp']
+                }
+            }
         };
 
-        // ==================== MOCK BACKEND STATE ====================
-        let backendState = {
-            isOnline: true,
-            lastSync: null,
-            apiCallLog: [],
-            syncedRooms: {},
-            dataVersion: 1
+        // ==================== AUTH STATE ====================
+        let userSession = {
+            isAuthenticated: false,
+            email: null,
+            accessToken: null,
+            refreshToken: null,
+            tokenExpiry: null,
+            sheetsId: null,
+            loginTime: null
         };
 
-        // Load backend state from localStorage
+        // Load user session
         try {
-            const saved = localStorage.getItem('backendState');
+            const saved = localStorage.getItem('userSession');
             if (saved) {
-                backendState = { ...backendState, ...JSON.parse(saved) };
+                userSession = { ...userSession, ...JSON.parse(saved) };
+                if (userSession.tokenExpiry && new Date(userSession.tokenExpiry) > new Date()) {
+                    // Token still valid
+                } else {
+                    userSession.isAuthenticated = false;
+                }
             }
         } catch (e) {
-            console.error('Backend state load error:', e);
+            console.error('Session load error:', e);
         }
 
         // ==================== INITIALIZATION ====================
@@ -445,7 +604,7 @@
             messages: { 1: [], 2: [], 3: [] }
         };
 
-        // Load from localStorage
+        // Load app state
         try {
             const saved = localStorage.getItem('appState');
             if (saved) {
@@ -454,96 +613,111 @@
                     if (loaded.rooms && loaded.rooms[roomId]) {
                         appState.rooms[roomId] = {
                             ...appState.rooms[roomId],
-                            ...loaded.rooms[roomId],
-                            tokenHistory: loaded.rooms[roomId].tokenHistory || [],
-                            integrityChecks: loaded.rooms[roomId].integrityChecks || []
+                            ...loaded.rooms[roomId]
                         };
                     }
                 });
                 if (loaded.messages) appState.messages = loaded.messages;
             }
         } catch (e) {
-            console.error('Error loading state:', e);
+            console.error('App state load error:', e);
         }
 
-        // ==================== BACKEND API MOCK ====================
-        async function mockApiCall(endpoint, method, data, roomId) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    const callLog = {
-                        timestamp: new Date().toISOString(),
-                        endpoint: endpoint,
-                        method: method,
-                        status: 'success',
-                        dataSize: data ? JSON.stringify(data).length : 0,
-                        roomId: roomId
-                    };
+        // ==================== OAUTH FLOW ====================
+        function simulateGoogleLogin() {
+            const email = prompt('Enter email for Google OAuth simulation:');
+            if (!email) return;
 
-                    backendState.apiCallLog.push(callLog);
-                    if (backendState.apiCallLog.length > 100) {
-                        backendState.apiCallLog.shift();
-                    }
+            userSession.isAuthenticated = true;
+            userSession.email = email;
+            userSession.accessToken = 'mock-access-token-' + Math.random().toString(36).substring(7);
+            userSession.refreshToken = 'mock-refresh-token-' + Math.random().toString(36).substring(7);
+            userSession.tokenExpiry = new Date(Date.now() + OAUTH_CONFIG.tokenExpiry * 1000).toISOString();
+            userSession.sheetsId = 'mock-sheets-id-' + Math.random().toString(36).substring(7);
+            userSession.loginTime = new Date().toISOString();
 
-                    backendState.lastSync = new Date().toISOString();
-                    saveBackendState();
-
-                    resolve({
-                        success: true,
-                        endpoint: endpoint,
-                        timestamp: new Date().toISOString(),
-                        dataReceived: data ? Object.keys(data).length : 0
-                    });
-                }, BACKEND_CONFIG.mockApiDelay);
-            });
+            saveUserSession();
+            renderApp();
         }
 
-        // ==================== BACKEND SYNC ====================
-        async function syncRoomData(roomId) {
+        function logout() {
+            userSession = {
+                isAuthenticated: false,
+                email: null,
+                accessToken: null,
+                refreshToken: null,
+                tokenExpiry: null,
+                sheetsId: null,
+                loginTime: null
+            };
+            localStorage.removeItem('userSession');
+            renderApp();
+        }
+
+        function saveUserSession() {
             try {
-                const room = appState.rooms[roomId];
-                if (!room) return;
-
-                const payload = {
-                    roomId: roomId,
-                    roomData: {
-                        title: room.title,
-                        currentAI: room.currentAI,
-                        tokenUsed: room.tokenUsed,
-                        executions: room.executions.length,
-                        emails: room.emails.length,
-                        relays: room.relayEvents.length
-                    },
-                    timestamp: new Date().toISOString()
-                };
-
-                await mockApiCall(API_ENDPOINTS.SYNC_DATA, 'POST', payload, roomId);
-                backendState.syncedRooms[roomId] = backendState.lastSync;
-                saveBackendState();
+                localStorage.setItem('userSession', JSON.stringify(userSession));
             } catch (e) {
-                console.error('Sync error:', e);
+                console.error('Session save error:', e);
             }
         }
 
-        async function logRelayEvent(roomId, event) {
-            try {
-                await mockApiCall(API_ENDPOINTS.LOG_RELAY, 'POST', {
-                    roomId: roomId,
-                    event: event
-                }, roomId);
-            } catch (e) {
-                console.error('Relay log error:', e);
-            }
+        function renderLogin() {
+            return `
+                <div class="login-card">
+                    <h1>🚀 Multi-Room Platform</h1>
+                    <p>Session 7: OAuth & API Framework</p>
+                    
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="emailInput" placeholder="shashikant@example.com" value="${userSession.email || 'shashikant15041982@gmail.com'}">
+                    </div>
+                    
+                    <button class="login-btn" onclick="loginWithEmail()">Sign In with Email</button>
+                    
+                    <div class="oauth-section">
+                        <p>Or sign in with OAuth:</p>
+                        <div class="oauth-buttons">
+                            <button class="oauth-btn" onclick="simulateGoogleLogin()">Google</button>
+                            <button class="oauth-btn" onclick="simulateOAuthLogin('github')">GitHub</button>
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
-        async function saveExecution(roomId, execution) {
-            try {
-                await mockApiCall(API_ENDPOINTS.SAVE_EXECUTION, 'POST', {
-                    roomId: roomId,
-                    execution: execution
-                }, roomId);
-            } catch (e) {
-                console.error('Execution save error:', e);
+        function loginWithEmail() {
+            const email = document.getElementById('emailInput').value;
+            if (!email) {
+                alert('Please enter email');
+                return;
             }
+
+            userSession.isAuthenticated = true;
+            userSession.email = email;
+            userSession.accessToken = 'mock-token-' + Math.random().toString(36).substring(7);
+            userSession.tokenExpiry = new Date(Date.now() + OAUTH_CONFIG.tokenExpiry * 1000).toISOString();
+            userSession.sheetsId = 'mock-sheets-' + Math.random().toString(36).substring(7);
+            userSession.loginTime = new Date().toISOString();
+
+            saveUserSession();
+            renderApp();
+        }
+
+        function simulateOAuthLogin(provider) {
+            const email = prompt(`Enter email for ${provider.toUpperCase()} OAuth:`);
+            if (!email) return;
+
+            userSession.isAuthenticated = true;
+            userSession.email = email;
+            userSession.accessToken = `mock-${provider}-token-` + Math.random().toString(36).substring(7);
+            userSession.refreshToken = `mock-${provider}-refresh-` + Math.random().toString(36).substring(7);
+            userSession.tokenExpiry = new Date(Date.now() + OAUTH_CONFIG.tokenExpiry * 1000).toISOString();
+            userSession.sheetsId = 'mock-sheets-' + Math.random().toString(36).substring(7);
+            userSession.loginTime = new Date().toISOString();
+
+            saveUserSession();
+            renderApp();
         }
 
         // ==================== TOKEN FUNCTIONS ====================
@@ -571,12 +745,12 @@
         function checkTokenThreshold(roomId) {
             const percent = calculateTokenUsagePercent(roomId) / 100;
             if (percent >= TOKEN_THRESHOLD_CRITICAL) {
-                return { level: 'critical', message: '🚨 CRITICAL: 85%+ tokens - Proactive handoff required!' };
+                return { level: 'critical', message: '🚨 CRITICAL: 85%+ tokens' };
             }
             if (percent >= TOKEN_THRESHOLD_WARNING) {
-                return { level: 'warning', message: '⚠️ WARNING: 70%+ tokens - Handoff recommended soon' };
+                return { level: 'warning', message: '⚠️ WARNING: 70%+ tokens' };
             }
-            return { level: 'normal', message: '✅ Normal token usage' };
+            return { level: 'normal', message: '✅ Normal' };
         }
 
         function proactiveHandoff(roomId) {
@@ -591,15 +765,10 @@
                 toAI: nextAI,
                 messageCount: room.messageCount,
                 contextKB: Math.ceil(room.tokenUsed / 250),
-                preHandoffHash: room.lastContextHash,
-                postHandoffHash: room.lastContextHash,
-                integrityVerified: true,
-                messagesTransferred: room.messageCount,
-                reason: 'Proactive handoff (85% token threshold reached)'
+                reason: 'Proactive handoff (85% threshold)'
             };
 
             room.relayEvents.push(relayEvent);
-            logRelayEvent(roomId, relayEvent);
             room.tokenUsed = 0;
             room.currentAI = nextAI;
             room.messageCount = 0;
@@ -608,15 +777,6 @@
                 room.relayStats[nextAI] = { handoffs: 0, messagesHandled: 0, totalContextKB: 0 };
             }
             room.relayStats[nextAI].handoffs++;
-
-            room.tokenHistory.push({
-                timestamp: new Date().toISOString(),
-                aiName: nextAI,
-                tokensUsed: 0,
-                percentUsed: 0,
-                reason: 'Proactive handoff triggered'
-            });
-
             saveState();
             return { success: true, nextAI };
         }
@@ -641,22 +801,6 @@
             saveState();
         }
 
-        // ==================== HASH & INTEGRITY ====================
-        function simpleHash(str) {
-            let hash = 0;
-            for (let i = 0; i < (str || '').length; i++) {
-                const char = (str || '').charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
-            }
-            return Math.abs(hash).toString(16).padStart(8, '0');
-        }
-
-        function generateContextHash(roomId) {
-            const messages = (appState.messages[roomId] || []).map(m => m.text).join('|');
-            return simpleHash(messages);
-        }
-
         // ==================== EXECUTION ====================
         function runExecution(roomId) {
             try {
@@ -678,7 +822,6 @@
                 room.lastRun = execution.timestamp;
                 room.status = 'active';
                 recordTokenUsage(roomId, estimatedTokens);
-                saveExecution(roomId, execution);
 
                 if (!appState.messages[roomId]) appState.messages[roomId] = [];
                 appState.messages[roomId].push({
@@ -687,21 +830,17 @@
                     timestamp: execution.timestamp
                 });
 
-                room.lastContextHash = generateContextHash(roomId);
-
                 if (room.messageCount > 20 && room.messageCount % 20 === 1) {
                     triggerRelay(roomId);
                 }
 
                 saveState();
-                syncRoomData(roomId);
-                renderUI();
+                renderApp();
             } catch (e) {
                 console.error('Execution error:', e);
             }
         }
 
-        // ==================== RELAY ====================
         function triggerRelay(roomId) {
             try {
                 const room = appState.rooms[roomId];
@@ -715,15 +854,10 @@
                     toAI: nextAI,
                     messageCount: room.messageCount,
                     contextKB: Math.ceil(room.tokenUsed / 250),
-                    preHandoffHash: room.lastContextHash,
-                    postHandoffHash: room.lastContextHash,
-                    integrityVerified: room.lastContextHash !== null,
-                    messagesTransferred: room.messageCount,
-                    reason: 'Message count threshold (20+) reached'
+                    reason: 'Message count (20+) threshold'
                 };
 
                 room.relayEvents.push(relayEvent);
-                logRelayEvent(roomId, relayEvent);
                 room.currentAI = nextAI;
                 room.messageCount = 0;
                 room.tokenUsed = 0;
@@ -732,8 +866,6 @@
                     room.relayStats[nextAI] = { handoffs: 0, messagesHandled: 0, totalContextKB: 0 };
                 }
                 room.relayStats[nextAI].handoffs++;
-                room.relayStats[nextAI].messagesHandled = (room.relayStats[nextAI].messagesHandled || 0) + relayEvent.messageCount;
-                room.relayStats[nextAI].totalContextKB = (room.relayStats[nextAI].totalContextKB || 0) + relayEvent.contextKB;
 
                 saveState();
             } catch (e) {
@@ -741,22 +873,20 @@
             }
         }
 
-        // ==================== EMAIL ====================
         function sendEmail(roomId) {
             try {
                 const room = appState.rooms[roomId];
                 const email = {
                     timestamp: new Date().toISOString(),
                     to: `recruiter${Math.floor(Math.random() * 100)}@company.com`,
-                    subject: `Profile Match - ${room.messageCount} jobs found`,
-                    preview: `Found ${room.messageCount} matching positions`,
+                    subject: `Profile Match - ${room.messageCount} jobs`,
                     status: 'sent'
                 };
 
                 room.emails.push(email);
                 room.emailsSent++;
                 saveState();
-                renderUI();
+                renderApp();
             } catch (e) {
                 console.error('Email error:', e);
             }
@@ -768,14 +898,6 @@
                 localStorage.setItem('appState', JSON.stringify(appState));
             } catch (e) {
                 console.error('Save error:', e);
-            }
-        }
-
-        function saveBackendState() {
-            try {
-                localStorage.setItem('backendState', JSON.stringify(backendState));
-            } catch (e) {
-                console.error('Backend save error:', e);
             }
         }
 
@@ -806,20 +928,14 @@
                             <value>${room.executions.length}</value>
                         </div>
                         <div class="card-stat">
-                            <label>Relays:</label>
-                            <value>${room.relayEvents.length}</value>
-                        </div>
-                        <div class="card-stat">
-                            <label>Emails Sent:</label>
+                            <label>Emails:</label>
                             <value>${room.emailsSent}</value>
                         </div>
                         <div class="ai-helpers">
                             <label>Available AIs:</label>
                             <div class="ai-list">${room.helpers.map(ai => `<span class="ai-badge">${ai}</span>`).join('')}</div>
                         </div>
-                        ${room.relayEvents.length > 0 ? '<span class="integrity-badge">🔐 VERIFIED</span>' : ''}
-                        ${checkTokenThreshold(room.id).level === 'critical' ? '<span class="token-warning">⚠️ Token Alert!</span>' : ''}
-                        <span class="backend-status${backendState.isOnline ? '' : ' offline'}">☁️ ${backendState.isOnline ? 'Backend Online' : 'Backend Offline'}</span>
+                        ${userSession.isAuthenticated ? '<span class="sync-badge">☁️ Synced to Sheets</span>' : ''}
                         <button class="run-btn" onclick="enterRoom(${room.id})">Enter Room</button>
                     </div>
                 `).join('')}
@@ -833,227 +949,164 @@
 
                 const threshold = checkTokenThreshold(roomId);
                 const tokenPercent = calculateTokenUsagePercent(roomId);
-                const lastSync = backendState.syncedRooms[roomId] ? formatTime(backendState.syncedRooms[roomId]) : 'Never';
 
                 return `
                     <div class="room-view">
-                        <button class="back-btn" onclick="backToHome()">← Back to Home</button>
+                        <button class="back-btn" onclick="backToHome()">← Back</button>
                         <h2>${room.title}</h2>
 
-                        ${threshold.level === 'critical' ? `<div style="background: #f8d7da; padding: 12px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #dc3545; color: #721c24;">🚨 ${threshold.message}</div>` : ''}
-                        ${threshold.level === 'warning' ? `<div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">⚠️ ${threshold.message}</div>` : ''}
-
-                        <button class="run-btn" onclick="runExecution(${roomId}); setTimeout(() => renderUI(), 500)">▶ RUN NOW</button>
-                        <button class="run-btn" style="background: #3b82f6;" onclick="sendEmail(${roomId}); setTimeout(() => renderUI(), 500)">✉️ SEND EMAIL</button>
+                        <button class="run-btn" onclick="runExecution(${roomId}); setTimeout(() => renderApp(), 500)">▶ RUN</button>
+                        <button class="run-btn" style="background: #3b82f6;" onclick="sendEmail(${roomId}); setTimeout(() => renderApp(), 500)">✉️ EMAIL</button>
 
                         <div class="tabs">
-                            <button class="tab-btn active" onclick="switchTab(${roomId}, 'code')">CODE</button>
-                            <button class="tab-btn" onclick="switchTab(${roomId}, 'output')">OUTPUT</button>
+                            <button class="tab-btn active" onclick="switchTab(${roomId}, 'output')">OUTPUT</button>
                             <button class="tab-btn" onclick="switchTab(${roomId}, 'history')">HISTORY</button>
-                            <button class="tab-btn" onclick="switchTab(${roomId}, 'emails')">EMAILS</button>
                             <button class="tab-btn" onclick="switchTab(${roomId}, 'relay')">RELAY</button>
-                            <button class="tab-btn" onclick="switchTab(${roomId}, 'relay-stats')">RELAY STATS</button>
-                            <button class="tab-btn" onclick="switchTab(${roomId}, 'integrity')">INTEGRITY</button>
-                            <button class="tab-btn" onclick="switchTab(${roomId}, 'token-monitor')">TOKEN MONITOR</button>
-                            <button class="tab-btn" onclick="switchTab(${roomId}, 'api')">API (NEW)</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'token')">TOKENS</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'sheets')">SHEETS (NEW)</button>
                         </div>
 
-                        <div id="tab-code-${roomId}" class="tab-content active">
-                            <div class="content-block">
-                                <label>Room Configuration</label>
-                                <value>ID: ${room.id}, Title: ${room.title}, Current AI: ${room.currentAI}</value>
-                            </div>
-                            <div class="content-block">
-                                <label>AI Helpers Available</label>
-                                <value>${room.helpers.join(', ')}</value>
-                            </div>
-                        </div>
-
-                        <div id="tab-output-${roomId}" class="tab-content">
+                        <div id="tab-output-${roomId}" class="tab-content active">
                             ${room.executions.length > 0
-                                ? room.executions.slice(-5).reverse().map((exec, idx) => `
+                                ? room.executions.slice(-5).reverse().map(exec => `
                                     <div class="history-item">
                                         <div class="history-item-time">${formatTime(exec.timestamp)}</div>
-                                        <div class="history-item-content">
-                                            ✓ Found ${exec.jobsFound} jobs (${exec.highMatch} high match) | ${exec.duration}s | ~${exec.tokensUsed} tokens
-                                        </div>
+                                        <div class="history-item-content">✓ ${exec.jobsFound} jobs | ${exec.tokensUsed} tokens</div>
                                     </div>
                                 `).join('')
-                                : '<div class="empty-state"><div class="empty-state-icon">📭</div>No executions yet</div>'
+                                : '<div class="empty-state"><div class="empty-state-icon">📭</div>No executions</div>'
                             }
                         </div>
 
                         <div id="tab-history-${roomId}" class="tab-content">
                             ${appState.messages[roomId] && appState.messages[roomId].length > 0
-                                ? appState.messages[roomId].slice().reverse().map(msg => `
+                                ? appState.messages[roomId].slice(-5).reverse().map(msg => `
                                     <div class="history-item">
                                         <div class="history-item-time">${formatTime(msg.timestamp)}</div>
                                         <div class="history-item-content">${msg.text}</div>
                                     </div>
                                 `).join('')
-                                : '<div class="empty-state"><div class="empty-state-icon">💬</div>No message history</div>'
-                            }
-                        </div>
-
-                        <div id="tab-emails-${roomId}" class="tab-content">
-                            ${room.emails.length > 0
-                                ? room.emails.slice().reverse().map(email => `
-                                    <div class="history-item">
-                                        <div class="history-item-time">${formatTime(email.timestamp)}</div>
-                                        <div class="history-item-content">
-                                            <strong>To:</strong> ${email.to}<br>
-                                            <strong>Subject:</strong> ${email.subject}<br>
-                                            <strong>Status:</strong> ${email.status}
-                                        </div>
-                                    </div>
-                                `).join('')
-                                : '<div class="empty-state"><div class="empty-state-icon">📧</div>No emails sent</div>'
+                                : '<div class="empty-state"><div class="empty-state-icon">💬</div>No history</div>'
                             }
                         </div>
 
                         <div id="tab-relay-${roomId}" class="tab-content">
                             ${room.relayEvents.length > 0
-                                ? room.relayEvents.slice().reverse().map(event => `
+                                ? room.relayEvents.slice(-3).reverse().map(event => `
                                     <div class="history-item">
                                         <div class="history-item-time">${formatTime(event.timestamp)}</div>
-                                        <div class="history-item-content">
-                                            🔄 ${event.fromAI} → ${event.toAI}<br>
-                                            Messages: ${event.messageCount} | Context: ${event.contextKB}KB<br>
-                                            Reason: ${event.reason}
-                                        </div>
+                                        <div class="history-item-content">🔄 ${event.fromAI} → ${event.toAI}</div>
                                     </div>
                                 `).join('')
-                                : '<div class="empty-state"><div class="empty-state-icon">🔄</div>No relay events yet</div>'
+                                : '<div class="empty-state"><div class="empty-state-icon">🔄</div>No relays</div>'
                             }
                         </div>
 
-                        <div id="tab-relay-stats-${roomId}" class="tab-content">
-                            ${Object.keys(room.relayStats).length > 0
-                                ? Object.entries(room.relayStats).map(([aiName, stats]) => `
-                                    <div class="content-block">
-                                        <label>${aiName}</label>
-                                        <div class="stat-row"><span class="stat-label">Handoffs:</span><span class="stat-value">${stats.handoffs}</span></div>
-                                        <div class="stat-row"><span class="stat-label">Messages Handled:</span><span class="stat-value">${stats.messagesHandled}</span></div>
-                                        <div class="stat-row"><span class="stat-label">Total Context (KB):</span><span class="stat-value">${stats.totalContextKB}</span></div>
-                                    </div>
-                                `).join('')
-                                : '<div class="empty-state"><div class="empty-state-icon">📊</div>No relay statistics yet</div>'
-                            }
-                        </div>
-
-                        <div id="tab-integrity-${roomId}" class="tab-content">
-                            ${room.integrityChecks.length > 0
-                                ? `<div class="content-block" style="background: #f0fdf4; border-left-color: #10b981;"><div class="stat-row"><span class="stat-label">Integrity Status:</span><span class="stat-value">✓ VERIFIED</span></div><div class="stat-row"><span class="stat-label">Total Checks:</span><span class="stat-value">${room.integrityChecks.length}</span></div></div>`
-                                : '<div class="empty-state"><div class="empty-state-icon">🔐</div>No integrity checks yet</div>'
-                            }
-                        </div>
-
-                        <div id="tab-token-monitor-${roomId}" class="tab-content">
-                            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
-                                <div class="stat-row"><span class="stat-label">Current AI:</span><span class="stat-value">${room.currentAI}</span></div>
-                                <div class="stat-row"><span class="stat-label">Tokens Used:</span><span class="stat-value">${room.tokenUsed.toLocaleString()}</span></div>
-                                <div class="stat-row"><span class="stat-label">Budget:</span><span class="stat-value">${getTokenBudget(room.currentAI).toLocaleString()}</span></div>
-                                <div class="stat-row"><span class="stat-label">Usage %:</span><span class="stat-value">${tokenPercent.toFixed(2)}%</span></div>
-                                <div class="stat-row"><span class="stat-label">Status:</span><span class="stat-value">${threshold.message}</span></div>
-                            </div>
-                        </div>
-
-                        <div id="tab-api-${roomId}" class="tab-content">
-                            <div class="content-block ${backendState.isOnline ? 'api-status-good' : 'api-status-error'}">
-                                <label>Backend Status</label>
-                                <value>${backendState.isOnline ? '✅ ONLINE' : '❌ OFFLINE'}</value>
+                        <div id="tab-token-${roomId}" class="tab-content">
+                            <div class="content-block">
+                                <label>Token Usage</label>
+                                <value>${room.tokenUsed.toLocaleString()} / ${getTokenBudget(room.currentAI).toLocaleString()} (${tokenPercent.toFixed(1)}%)</value>
                             </div>
                             <div class="content-block">
-                                <label>Last Sync</label>
-                                <value>${lastSync}</value>
+                                <label>Status</label>
+                                <value>${threshold.message}</value>
                             </div>
-                            <div class="content-block">
-                                <label>API Calls</label>
-                                <value>${backendState.apiCallLog.length} calls made</value>
+                        </div>
+
+                        <div id="tab-sheets-${roomId}" class="tab-content">
+                            <div class="oauth-status">
+                                <div class="oauth-status-label">Google Sheets Integration</div>
+                                <div class="oauth-status-value">
+                                    ${userSession.isAuthenticated 
+                                        ? `✅ Connected as ${userSession.email}<br>Sheets ID: ${userSession.sheetsId}<br>Status: Data syncing to Sheets` 
+                                        : '❌ Not authenticated - Login to enable'}
+                                </div>
                             </div>
-                            <div class="content-block">
-                                <label>API Endpoints</label>
-                                <value>
-                                    • POST /v1/sync/room-data<br>
-                                    • POST /v1/log/relay-handoff<br>
-                                    • POST /v1/save/execution<br>
-                                    • POST /v1/save/email<br>
-                                    • GET /v1/status/token-usage
-                                </value>
-                            </div>
-                            <h3 style="margin: 20px 0 10px 0; color: #667eea;">Recent API Calls (Last 10)</h3>
-                            ${backendState.apiCallLog.length > 0
-                                ? backendState.apiCallLog.slice(-10).reverse().map(log => `
-                                    <div class="api-log-item">
-                                        <div class="api-log-time">${formatTime(log.timestamp)}</div>
-                                        <div class="api-log-success">${log.method} ${log.endpoint}</div>
-                                        <div style="font-size: 0.85em; color: #666;">Data size: ${log.dataSize} bytes | Room: ${log.roomId}</div>
-                                    </div>
-                                `).join('')
-                                : '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">📡</div>No API calls yet</div>'
-                            }
+                            <div class="sheets-structure">Sheets Structure:
+
+Rooms Table:
+- room_id | title | current_ai | status
+- executions | emails | relays | last_updated
+
+Executions Table:
+- execution_id | room_id | timestamp
+- jobs_found | high_match | duration | tokens_used
+
+Relays Table:
+- relay_id | room_id | from_ai | to_ai
+- message_count | context_kb | timestamp
+
+Emails Table:
+- email_id | room_id | recipient
+- subject | status | timestamp
+
+TokenHistory Table:
+- entry_id | room_id | ai_name
+- tokens_used | percent_used | timestamp</div>
                         </div>
                     </div>
                 `;
             } catch (e) {
                 console.error('Room render error:', e);
-                return '<div class="room-view"><p>Error loading room. Please refresh.</p></div>';
+                return '<div class="room-view"><p>Error</p></div>';
             }
         }
 
-        function renderUI() {
+        function renderApp() {
             try {
+                const loginView = document.getElementById('loginView');
+                const header = document.getElementById('header');
                 const homeView = document.getElementById('homeView');
                 const roomViewsContainer = document.getElementById('roomViews');
+
+                if (!userSession.isAuthenticated) {
+                    loginView.classList.add('active');
+                    loginView.innerHTML = renderLogin();
+                    header.style.display = 'none';
+                    return;
+                }
+
+                loginView.classList.remove('active');
+                header.style.display = 'flex';
+                document.getElementById('userEmail').textContent = userSession.email;
 
                 homeView.innerHTML = renderHome();
                 homeView.classList.add('active');
 
                 roomViewsContainer.innerHTML = Object.keys(appState.rooms).map(roomId => `<div id="room-${roomId}" class="room-views">${renderRoom(roomId)}</div>`).join('');
             } catch (e) {
-                console.error('UI render error:', e);
+                console.error('Render error:', e);
             }
         }
 
         function enterRoom(roomId) {
-            try {
-                document.getElementById('homeView').classList.remove('active');
-                for (let id of Object.keys(appState.rooms)) {
-                    document.getElementById(`room-${id}`).classList.remove('active');
-                }
-                document.getElementById(`room-${roomId}`).classList.add('active');
-            } catch (e) {
-                console.error('Enter room error:', e);
+            document.getElementById('homeView').classList.remove('active');
+            for (let id of Object.keys(appState.rooms)) {
+                const elem = document.getElementById(`room-${id}`);
+                if (elem) elem.classList.remove('active');
             }
+            document.getElementById(`room-${roomId}`).classList.add('active');
         }
 
         function backToHome() {
-            try {
-                for (let id of Object.keys(appState.rooms)) {
-                    document.getElementById(`room-${id}`).classList.remove('active');
-                }
-                document.getElementById('homeView').classList.add('active');
-                renderUI();
-            } catch (e) {
-                console.error('Back home error:', e);
+            for (let id of Object.keys(appState.rooms)) {
+                const elem = document.getElementById(`room-${id}`);
+                if (elem) elem.classList.remove('active');
             }
+            document.getElementById('homeView').classList.add('active');
         }
 
         function switchTab(roomId, tabName) {
-            try {
-                const tabButtons = document.querySelectorAll(`#room-${roomId} .tab-btn`);
-                const tabContents = document.querySelectorAll(`#room-${roomId} .tab-content`);
-                tabButtons.forEach(btn => btn.classList.remove('active'));
-                tabContents.forEach(content => content.classList.remove('active'));
-                document.querySelector(`#room-${roomId} [onclick*="'${tabName}'"]`).classList.add('active');
-                document.getElementById(`tab-${tabName}-${roomId}`).classList.add('active');
-            } catch (e) {
-                console.error('Tab switch error:', e);
-            }
+            const tabButtons = document.querySelectorAll(`#room-${roomId} .tab-btn`);
+            const tabContents = document.querySelectorAll(`#room-${roomId} .tab-content`);
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            document.querySelector(`#room-${roomId} [onclick*="'${tabName}'"]`)?.classList.add('active');
+            document.getElementById(`tab-${tabName}-${roomId}`)?.classList.add('active');
         }
 
         // Initialize
-        renderUI();
+        renderApp();
     </script>
 </body>
 </html>
