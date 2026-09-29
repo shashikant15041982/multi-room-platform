@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Room Platform - Session 5 (Advanced Handoff Detection)</title>
+    <title>Multi-Room Platform - Session 6 (Backend Structure)</title>
     <style>
         * {
             margin: 0;
@@ -120,7 +120,7 @@
             font-weight: 600;
         }
 
-        .integrity-badge {
+        .backend-status {
             display: inline-block;
             background: #10b981;
             color: white;
@@ -131,9 +131,13 @@
             font-weight: 600;
         }
 
-        .token-badge {
+        .backend-status.offline {
+            background: #ef4444;
+        }
+
+        .integrity-badge {
             display: inline-block;
-            background: #f59e0b;
+            background: #10b981;
             color: white;
             padding: 4px 10px;
             border-radius: 5px;
@@ -270,6 +274,7 @@
             color: #667eea;
             font-family: 'Courier New', monospace;
             word-break: break-all;
+            font-size: 0.95em;
         }
 
         .history-item {
@@ -309,93 +314,38 @@
             font-weight: bold;
         }
 
-        .context-bar {
-            background: #e5e7eb;
-            border-radius: 5px;
-            height: 20px;
-            margin: 10px 0;
-            overflow: hidden;
+        .api-status-good {
+            background: #f0fdf4;
+            border-left-color: #10b981;
         }
 
-        .context-fill {
-            background: linear-gradient(90deg, #667eea, #764ba2);
-            height: 100%;
-            transition: width 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding-right: 5px;
-            color: white;
-            font-size: 0.75em;
-            font-weight: bold;
+        .api-status-error {
+            background: #fef2f2;
+            border-left-color: #ef4444;
         }
 
-        .token-monitor-section {
-            background: #fff3cd;
-            padding: 15px;
-            border-radius: 5px;
-            margin: 15px 0;
-            border-left: 4px solid #ffc107;
-        }
-
-        .token-alert-critical {
-            background: #f8d7da;
-            padding: 12px;
-            border-radius: 5px;
-            margin: 10px 0;
-            border-left: 4px solid #dc3545;
-            color: #721c24;
-        }
-
-        .token-budget-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .token-budget-card {
+        .api-log-item {
             background: white;
-            padding: 12px;
-            border-radius: 5px;
-            border: 2px solid #e5e7eb;
-        }
-
-        .token-budget-card.warning {
-            border-color: #ffc107;
-            background: #fffbf0;
-        }
-
-        .token-budget-card.critical {
-            border-color: #dc3545;
-            background: #fff5f5;
-        }
-
-        .token-ai-name {
-            font-weight: 600;
-            color: #667eea;
-            margin-bottom: 5px;
-            font-size: 0.95em;
-        }
-
-        .token-progress {
-            background: #e5e7eb;
-            border-radius: 3px;
-            height: 15px;
+            padding: 10px;
             margin: 8px 0;
-            overflow: hidden;
+            border-left: 4px solid #3b82f6;
+            border-radius: 4px;
+            font-size: 0.9em;
         }
 
-        .token-progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #10b981, #fbbf24, #ef4444);
-            transition: width 0.3s ease;
+        .api-log-time {
+            color: #999;
+            font-size: 0.85em;
         }
 
-        .token-stats {
-            font-size: 0.8em;
-            color: #666;
-            margin-top: 5px;
+        .api-log-success {
+            color: #10b981;
+            font-weight: 600;
+        }
+
+        .api-log-error {
+            color: #ef4444;
+            font-weight: 600;
         }
 
         .empty-state {
@@ -428,10 +378,6 @@
                 font-size: 0.9em;
             }
 
-            .token-budget-grid {
-                grid-template-columns: 1fr;
-            }
-
             .run-btn {
                 margin-right: 5px;
                 padding: 10px 16px;
@@ -444,7 +390,7 @@
     <div class="container">
         <header>
             <h1>🚀 Multi-Room Platform</h1>
-            <p>Session 5: Advanced Handoff Detection with Token Monitoring</p>
+            <p>Session 6: Backend Structure & Mock APIs</p>
         </header>
 
         <div id="homeView" class="home-view"></div>
@@ -452,16 +398,42 @@
     </div>
 
     <script>
-        // ==================== CONFIG ====================
-        const TOKEN_BUDGET_PER_AI = {
-            'Claude': 100000,
-            'ChatGPT': 80000,
-            'DeepSeek': 60000,
-            'Mistral': 50000
+        // ==================== BACKEND CONFIG ====================
+        const BACKEND_CONFIG = {
+            apiBaseUrl: 'mock://backend-api',
+            syncInterval: 5000, // 5 seconds
+            mockApiDelay: 500, // 500ms simulated latency
+            maxRetries: 3
         };
 
-        const TOKEN_THRESHOLD_WARNING = 0.70; // 70% warning
-        const TOKEN_THRESHOLD_CRITICAL = 0.85; // 85% critical - trigger proactive handoff
+        // ==================== API ENDPOINTS ====================
+        const API_ENDPOINTS = {
+            SYNC_DATA: '/v1/sync/room-data',
+            FETCH_DATA: '/v1/fetch/room-data',
+            LOG_RELAY: '/v1/log/relay-handoff',
+            TOKEN_STATUS: '/v1/status/token-usage',
+            SAVE_EXECUTION: '/v1/save/execution',
+            SAVE_EMAIL: '/v1/save/email'
+        };
+
+        // ==================== MOCK BACKEND STATE ====================
+        let backendState = {
+            isOnline: true,
+            lastSync: null,
+            apiCallLog: [],
+            syncedRooms: {},
+            dataVersion: 1
+        };
+
+        // Load backend state from localStorage
+        try {
+            const saved = localStorage.getItem('backendState');
+            if (saved) {
+                backendState = { ...backendState, ...JSON.parse(saved) };
+            }
+        } catch (e) {
+            console.error('Backend state load error:', e);
+        }
 
         // ==================== INITIALIZATION ====================
         let appState = {
@@ -494,7 +466,97 @@
             console.error('Error loading state:', e);
         }
 
+        // ==================== BACKEND API MOCK ====================
+        async function mockApiCall(endpoint, method, data, roomId) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    const callLog = {
+                        timestamp: new Date().toISOString(),
+                        endpoint: endpoint,
+                        method: method,
+                        status: 'success',
+                        dataSize: data ? JSON.stringify(data).length : 0,
+                        roomId: roomId
+                    };
+
+                    backendState.apiCallLog.push(callLog);
+                    if (backendState.apiCallLog.length > 100) {
+                        backendState.apiCallLog.shift();
+                    }
+
+                    backendState.lastSync = new Date().toISOString();
+                    saveBackendState();
+
+                    resolve({
+                        success: true,
+                        endpoint: endpoint,
+                        timestamp: new Date().toISOString(),
+                        dataReceived: data ? Object.keys(data).length : 0
+                    });
+                }, BACKEND_CONFIG.mockApiDelay);
+            });
+        }
+
+        // ==================== BACKEND SYNC ====================
+        async function syncRoomData(roomId) {
+            try {
+                const room = appState.rooms[roomId];
+                if (!room) return;
+
+                const payload = {
+                    roomId: roomId,
+                    roomData: {
+                        title: room.title,
+                        currentAI: room.currentAI,
+                        tokenUsed: room.tokenUsed,
+                        executions: room.executions.length,
+                        emails: room.emails.length,
+                        relays: room.relayEvents.length
+                    },
+                    timestamp: new Date().toISOString()
+                };
+
+                await mockApiCall(API_ENDPOINTS.SYNC_DATA, 'POST', payload, roomId);
+                backendState.syncedRooms[roomId] = backendState.lastSync;
+                saveBackendState();
+            } catch (e) {
+                console.error('Sync error:', e);
+            }
+        }
+
+        async function logRelayEvent(roomId, event) {
+            try {
+                await mockApiCall(API_ENDPOINTS.LOG_RELAY, 'POST', {
+                    roomId: roomId,
+                    event: event
+                }, roomId);
+            } catch (e) {
+                console.error('Relay log error:', e);
+            }
+        }
+
+        async function saveExecution(roomId, execution) {
+            try {
+                await mockApiCall(API_ENDPOINTS.SAVE_EXECUTION, 'POST', {
+                    roomId: roomId,
+                    execution: execution
+                }, roomId);
+            } catch (e) {
+                console.error('Execution save error:', e);
+            }
+        }
+
         // ==================== TOKEN FUNCTIONS ====================
+        const TOKEN_BUDGET_PER_AI = {
+            'Claude': 100000,
+            'ChatGPT': 80000,
+            'DeepSeek': 60000,
+            'Mistral': 50000
+        };
+
+        const TOKEN_THRESHOLD_WARNING = 0.70;
+        const TOKEN_THRESHOLD_CRITICAL = 0.85;
+
         function getTokenBudget(aiName) {
             return TOKEN_BUDGET_PER_AI[aiName] || 100000;
         }
@@ -508,8 +570,6 @@
 
         function checkTokenThreshold(roomId) {
             const percent = calculateTokenUsagePercent(roomId) / 100;
-            const room = appState.rooms[roomId];
-
             if (percent >= TOKEN_THRESHOLD_CRITICAL) {
                 return { level: 'critical', message: '🚨 CRITICAL: 85%+ tokens - Proactive handoff required!' };
             }
@@ -539,6 +599,7 @@
             };
 
             room.relayEvents.push(relayEvent);
+            logRelayEvent(roomId, relayEvent);
             room.tokenUsed = 0;
             room.currentAI = nextAI;
             room.messageCount = 0;
@@ -617,6 +678,7 @@
                 room.lastRun = execution.timestamp;
                 room.status = 'active';
                 recordTokenUsage(roomId, estimatedTokens);
+                saveExecution(roomId, execution);
 
                 if (!appState.messages[roomId]) appState.messages[roomId] = [];
                 appState.messages[roomId].push({
@@ -632,6 +694,7 @@
                 }
 
                 saveState();
+                syncRoomData(roomId);
                 renderUI();
             } catch (e) {
                 console.error('Execution error:', e);
@@ -660,6 +723,7 @@
                 };
 
                 room.relayEvents.push(relayEvent);
+                logRelayEvent(roomId, relayEvent);
                 room.currentAI = nextAI;
                 room.messageCount = 0;
                 room.tokenUsed = 0;
@@ -707,6 +771,14 @@
             }
         }
 
+        function saveBackendState() {
+            try {
+                localStorage.setItem('backendState', JSON.stringify(backendState));
+            } catch (e) {
+                console.error('Backend save error:', e);
+            }
+        }
+
         function formatTime(isoString) {
             try {
                 return new Date(isoString).toLocaleTimeString();
@@ -747,7 +819,7 @@
                         </div>
                         ${room.relayEvents.length > 0 ? '<span class="integrity-badge">🔐 VERIFIED</span>' : ''}
                         ${checkTokenThreshold(room.id).level === 'critical' ? '<span class="token-warning">⚠️ Token Alert!</span>' : ''}
-                        ${checkTokenThreshold(room.id).level === 'warning' ? '<span class="token-badge">📊 Token Warning</span>' : ''}
+                        <span class="backend-status${backendState.isOnline ? '' : ' offline'}">☁️ ${backendState.isOnline ? 'Backend Online' : 'Backend Offline'}</span>
                         <button class="run-btn" onclick="enterRoom(${room.id})">Enter Room</button>
                     </div>
                 `).join('')}
@@ -761,14 +833,15 @@
 
                 const threshold = checkTokenThreshold(roomId);
                 const tokenPercent = calculateTokenUsagePercent(roomId);
+                const lastSync = backendState.syncedRooms[roomId] ? formatTime(backendState.syncedRooms[roomId]) : 'Never';
 
                 return `
                     <div class="room-view">
                         <button class="back-btn" onclick="backToHome()">← Back to Home</button>
                         <h2>${room.title}</h2>
 
-                        ${threshold.level === 'critical' ? `<div class="token-alert-critical">🚨 ${threshold.message}</div>` : ''}
-                        ${threshold.level === 'warning' ? `<div class="token-monitor-section">⚠️ ${threshold.message}</div>` : ''}
+                        ${threshold.level === 'critical' ? `<div style="background: #f8d7da; padding: 12px; border-radius: 5px; margin: 10px 0; border-left: 4px solid #dc3545; color: #721c24;">🚨 ${threshold.message}</div>` : ''}
+                        ${threshold.level === 'warning' ? `<div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">⚠️ ${threshold.message}</div>` : ''}
 
                         <button class="run-btn" onclick="runExecution(${roomId}); setTimeout(() => renderUI(), 500)">▶ RUN NOW</button>
                         <button class="run-btn" style="background: #3b82f6;" onclick="sendEmail(${roomId}); setTimeout(() => renderUI(), 500)">✉️ SEND EMAIL</button>
@@ -782,6 +855,7 @@
                             <button class="tab-btn" onclick="switchTab(${roomId}, 'relay-stats')">RELAY STATS</button>
                             <button class="tab-btn" onclick="switchTab(${roomId}, 'integrity')">INTEGRITY</button>
                             <button class="tab-btn" onclick="switchTab(${roomId}, 'token-monitor')">TOKEN MONITOR</button>
+                            <button class="tab-btn" onclick="switchTab(${roomId}, 'api')">API (NEW)</button>
                         </div>
 
                         <div id="tab-code-${roomId}" class="tab-content active">
@@ -845,7 +919,6 @@
                                         <div class="history-item-content">
                                             🔄 ${event.fromAI} → ${event.toAI}<br>
                                             Messages: ${event.messageCount} | Context: ${event.contextKB}KB<br>
-                                            Hash: ${event.preHandoffHash} | Verified: ${event.integrityVerified ? '✓' : '✗'}<br>
                                             Reason: ${event.reason}
                                         </div>
                                     </div>
@@ -856,108 +929,68 @@
 
                         <div id="tab-relay-stats-${roomId}" class="tab-content">
                             ${Object.keys(room.relayStats).length > 0
-                                ? Object.entries(room.relayStats).map(([aiName, stats]) => {
-                                    const avgContextPerHandoff = stats.handoffs > 0 ? (stats.totalContextKB / stats.handoffs).toFixed(2) : 0;
-                                    const contextPercent = Math.min((stats.totalContextKB / 500) * 100, 100);
-                                    return `
-                                        <div class="content-block">
-                                            <label>${aiName}</label>
-                                            <div class="stat-row"><span class="stat-label">Handoffs:</span><span class="stat-value">${stats.handoffs}</span></div>
-                                            <div class="stat-row"><span class="stat-label">Messages Handled:</span><span class="stat-value">${stats.messagesHandled}</span></div>
-                                            <div class="stat-row"><span class="stat-label">Total Context (KB):</span><span class="stat-value">${stats.totalContextKB}</span></div>
-                                            <div class="stat-row"><span class="stat-label">Avg Context/Handoff (KB):</span><span class="stat-value">${avgContextPerHandoff}</span></div>
-                                            <div class="context-bar">
-                                                <div class="context-fill" style="width: ${contextPercent}%"></div>
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')
+                                ? Object.entries(room.relayStats).map(([aiName, stats]) => `
+                                    <div class="content-block">
+                                        <label>${aiName}</label>
+                                        <div class="stat-row"><span class="stat-label">Handoffs:</span><span class="stat-value">${stats.handoffs}</span></div>
+                                        <div class="stat-row"><span class="stat-label">Messages Handled:</span><span class="stat-value">${stats.messagesHandled}</span></div>
+                                        <div class="stat-row"><span class="stat-label">Total Context (KB):</span><span class="stat-value">${stats.totalContextKB}</span></div>
+                                    </div>
+                                `).join('')
                                 : '<div class="empty-state"><div class="empty-state-icon">📊</div>No relay statistics yet</div>'
                             }
                         </div>
 
                         <div id="tab-integrity-${roomId}" class="tab-content">
                             ${room.integrityChecks.length > 0
-                                ? `
-                                    <div class="content-block" style="background: #f0fdf4; border-left-color: #10b981;">
-                                        <div class="stat-row">
-                                            <span class="stat-label">Integrity Status:</span>
-                                            <span class="stat-value">✓ VERIFIED</span>
-                                        </div>
-                                        <div class="stat-row">
-                                            <span class="stat-label">Total Checks:</span>
-                                            <span class="stat-value">${room.integrityChecks.length}</span>
-                                        </div>
-                                        <div class="stat-row">
-                                            <span class="stat-label">Last Context Hash:</span>
-                                            <span class="stat-value" style="font-family: monospace; font-size: 0.9em;">${room.lastContextHash}</span>
-                                        </div>
-                                    </div>
-                                `
-                                : '<div class="empty-state"><div class="empty-state-icon">🔐</div>No integrity checks yet (triggered on relay)</div>'
+                                ? `<div class="content-block" style="background: #f0fdf4; border-left-color: #10b981;"><div class="stat-row"><span class="stat-label">Integrity Status:</span><span class="stat-value">✓ VERIFIED</span></div><div class="stat-row"><span class="stat-label">Total Checks:</span><span class="stat-value">${room.integrityChecks.length}</span></div></div>`
+                                : '<div class="empty-state"><div class="empty-state-icon">🔐</div>No integrity checks yet</div>'
                             }
                         </div>
 
                         <div id="tab-token-monitor-${roomId}" class="tab-content">
-                            <div class="token-monitor-section">
-                                <div class="stat-row">
-                                    <span class="stat-label">Current AI:</span>
-                                    <span class="stat-value">${room.currentAI}</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Tokens Used:</span>
-                                    <span class="stat-value">${room.tokenUsed.toLocaleString()}</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Budget:</span>
-                                    <span class="stat-value">${getTokenBudget(room.currentAI).toLocaleString()}</span>
-                                </div>
-                                <div class="stat-row">
-                                    <span class="stat-label">Usage %:</span>
-                                    <span class="stat-value">${tokenPercent.toFixed(2)}%</span>
-                                </div>
-                                <div class="token-progress">
-                                    <div class="token-progress-fill" style="width: ${Math.min(tokenPercent, 100)}%"></div>
-                                </div>
-                                <div class="stat-row" style="margin-top: 10px;">
-                                    <span class="stat-label">Status:</span>
-                                    <span class="stat-value">${threshold.message}</span>
-                                </div>
+                            <div style="background: #fff3cd; padding: 15px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #ffc107;">
+                                <div class="stat-row"><span class="stat-label">Current AI:</span><span class="stat-value">${room.currentAI}</span></div>
+                                <div class="stat-row"><span class="stat-label">Tokens Used:</span><span class="stat-value">${room.tokenUsed.toLocaleString()}</span></div>
+                                <div class="stat-row"><span class="stat-label">Budget:</span><span class="stat-value">${getTokenBudget(room.currentAI).toLocaleString()}</span></div>
+                                <div class="stat-row"><span class="stat-label">Usage %:</span><span class="stat-value">${tokenPercent.toFixed(2)}%</span></div>
+                                <div class="stat-row"><span class="stat-label">Status:</span><span class="stat-value">${threshold.message}</span></div>
                             </div>
+                        </div>
 
-                            <h3 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1.1em;">All AI Token Budgets</h3>
-                            <div class="token-budget-grid">
-                                ${room.helpers.map(aiName => {
-                                    const budget = getTokenBudget(aiName);
-                                    const used = room.tokenUsed;
-                                    const percent = (used / budget) * 100;
-                                    const isWarning = percent >= TOKEN_THRESHOLD_WARNING * 100;
-                                    const isCritical = percent >= TOKEN_THRESHOLD_CRITICAL * 100;
-                                    return `
-                                        <div class="token-budget-card ${isCritical ? 'critical' : isWarning ? 'warning' : ''}">
-                                            <div class="token-ai-name">${aiName}</div>
-                                            <div class="token-progress">
-                                                <div class="token-progress-fill" style="width: ${Math.min(percent, 100)}%"></div>
-                                            </div>
-                                            <div class="token-stats">
-                                                ${used.toLocaleString()} / ${budget.toLocaleString()} (${percent.toFixed(1)}%)
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')}
+                        <div id="tab-api-${roomId}" class="tab-content">
+                            <div class="content-block ${backendState.isOnline ? 'api-status-good' : 'api-status-error'}">
+                                <label>Backend Status</label>
+                                <value>${backendState.isOnline ? '✅ ONLINE' : '❌ OFFLINE'}</value>
                             </div>
-
-                            <h3 style="margin: 20px 0 10px 0; color: #667eea; font-size: 1.1em;">Token Usage History (Last 10)</h3>
-                            ${room.tokenHistory.length > 0
-                                ? room.tokenHistory.slice(-10).reverse().map(entry => `
-                                    <div class="history-item">
-                                        <div class="history-item-time">${formatTime(entry.timestamp)} | ${entry.aiName}</div>
-                                        <div class="history-item-content">
-                                            Tokens: ${entry.tokensUsed} | Usage: ${entry.percentUsed.toFixed(2)}% | Reason: ${entry.reason}
-                                        </div>
+                            <div class="content-block">
+                                <label>Last Sync</label>
+                                <value>${lastSync}</value>
+                            </div>
+                            <div class="content-block">
+                                <label>API Calls</label>
+                                <value>${backendState.apiCallLog.length} calls made</value>
+                            </div>
+                            <div class="content-block">
+                                <label>API Endpoints</label>
+                                <value>
+                                    • POST /v1/sync/room-data<br>
+                                    • POST /v1/log/relay-handoff<br>
+                                    • POST /v1/save/execution<br>
+                                    • POST /v1/save/email<br>
+                                    • GET /v1/status/token-usage
+                                </value>
+                            </div>
+                            <h3 style="margin: 20px 0 10px 0; color: #667eea;">Recent API Calls (Last 10)</h3>
+                            ${backendState.apiCallLog.length > 0
+                                ? backendState.apiCallLog.slice(-10).reverse().map(log => `
+                                    <div class="api-log-item">
+                                        <div class="api-log-time">${formatTime(log.timestamp)}</div>
+                                        <div class="api-log-success">${log.method} ${log.endpoint}</div>
+                                        <div style="font-size: 0.85em; color: #666;">Data size: ${log.dataSize} bytes | Room: ${log.roomId}</div>
                                     </div>
                                 `).join('')
-                                : '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">📊</div>No token history yet</div>'
+                                : '<div class="empty-state" style="padding: 20px;"><div class="empty-state-icon">📡</div>No API calls yet</div>'
                             }
                         </div>
                     </div>
