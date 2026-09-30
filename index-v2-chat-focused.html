@@ -29,17 +29,22 @@
         .empty-rooms-icon { font-size: 48px; opacity: 0.5; }
         .logout-btn { padding: 12px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; color: #333; margin-top: auto; }
         #chatScreen { flex-direction: column; }
-        .chat-header { padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: white; }
+        .chat-header { padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: white; flex-wrap: wrap; gap: 10px; }
         .chat-header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .chat-header-left button { padding: 8px 12px; background: #f5f5f5; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; min-width: 40px; }
         .chat-header-title { font-weight: 600; font-size: 16px; color: #333; min-width: 0; word-break: break-word; }
         .ai-selector { font-size: 12px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+        .token-indicator { font-size: 11px; padding: 4px 8px; background: #e8f4e8; border-radius: 4px; color: #10a937; font-weight: 600; }
+        .token-indicator.warning { background: #fef3e8; color: #d97706; }
+        .token-indicator.critical { background: #fee8e8; color: #dc2626; }
         .messages-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
         .message { display: flex; word-wrap: break-word; }
         .message.user { justify-content: flex-end; }
+        .message.system { justify-content: center; }
         .message-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
         .message.user .message-bubble { background: #667eea; color: white; }
         .message.ai .message-bubble { background: #f0f0f0; color: #333; border-left: 3px solid #ddd; }
+        .message.system .message-bubble { background: #f0f8ff; color: #0066cc; font-size: 12px; max-width: 90%; text-align: center; padding: 8px 12px; }
         .message-ai-info { font-size: 11px; color: #666; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
         .ai-badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600; }
         .ai-claude { background: #e8e4f3; color: #667eea; }
@@ -67,6 +72,7 @@
         .ai-option.selected { border-color: #667eea; background: #f0f0ff; }
         .ai-option-name { font-weight: 600; margin-bottom: 4px; }
         .ai-option-desc { font-size: 12px; color: #999; }
+        .settings-link { font-size: 12px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; text-decoration: none; color: #333; }
     </style>
 </head>
 <body>
@@ -74,7 +80,7 @@
         <div class="login-box">
             <h1>💬</h1>
             <h1>AI Chat Workspace</h1>
-            <p>Multi-AI chat with Claude, ChatGPT, DeepSeek & Mistral</p>
+            <p>Smart multi-AI chat with auto-switching</p>
             <input type="email" id="emailInput" placeholder="Enter email" autofocus>
             <button onclick="handleLogin()">Sign In</button>
         </div>
@@ -106,6 +112,7 @@
                 <option value="DeepSeek">🟠 DeepSeek</option>
                 <option value="Mistral">🔴 Mistral</option>
             </select>
+            <div class="token-indicator" id="tokenIndicator">Tokens: 0</div>
         </div>
         <div class="messages-area" id="messagesArea">
             <div class="empty-chat">
@@ -122,23 +129,23 @@
     <div id="newRoomModal" class="modal">
         <div class="modal-box">
             <h2>Create New Room</h2>
-            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Which AI would you like to start with?</p>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Choose starting AI (can switch anytime)</p>
             <div class="ai-selector-modal" id="aiSelectorModal">
                 <div class="ai-option selected" data-ai="Claude" onclick="selectStartAI(this)">
                     <div class="ai-option-name">🟣 Claude</div>
-                    <div class="ai-option-desc">Anthropic</div>
+                    <div class="ai-option-desc">Best reasoning</div>
                 </div>
                 <div class="ai-option" data-ai="ChatGPT" onclick="selectStartAI(this)">
                     <div class="ai-option-name">🟢 ChatGPT</div>
-                    <div class="ai-option-desc">OpenAI</div>
+                    <div class="ai-option-desc">General knowledge</div>
                 </div>
                 <div class="ai-option" data-ai="DeepSeek" onclick="selectStartAI(this)">
                     <div class="ai-option-name">🟠 DeepSeek</div>
-                    <div class="ai-option-desc">DeepSeek</div>
+                    <div class="ai-option-desc">Fast & cheap</div>
                 </div>
                 <div class="ai-option" data-ai="Mistral" onclick="selectStartAI(this)">
                     <div class="ai-option-name">🔴 Mistral</div>
-                    <div class="ai-option-desc">Mistral AI</div>
+                    <div class="ai-option-desc">Privacy-first</div>
                 </div>
             </div>
             <input type="text" id="roomNameInput" placeholder="Room name (e.g., 'Python Help')" autofocus>
@@ -151,19 +158,30 @@
 
     <script>
         // CONFIG
-        const API_URL = 'http://localhost:3000'; // Change to Replit URL when deployed
+        const API_URL = 'http://localhost:3000';
+        
+        // TOKEN LIMITS (when to auto-switch)
+        const TOKEN_LIMITS = {
+            Claude: 100000,
+            ChatGPT: 120000,
+            DeepSeek: 60000,
+            Mistral: 80000
+        };
         
         // AI CONFIGS
         const AI_CONFIGS = {
-            Claude: { color: '#667eea', emoji: '🟣', provider: 'Anthropic' },
-            ChatGPT: { color: '#10a937', emoji: '🟢', provider: 'OpenAI' },
-            DeepSeek: { color: '#d97706', emoji: '🟠', provider: 'DeepSeek' },
-            Mistral: { color: '#dc2626', emoji: '🔴', provider: 'Mistral AI' }
+            Claude: { color: '#667eea', emoji: '🟣', provider: 'Anthropic', order: 0 },
+            ChatGPT: { color: '#10a937', emoji: '🟢', provider: 'OpenAI', order: 1 },
+            DeepSeek: { color: '#d97706', emoji: '🟠', provider: 'DeepSeek', order: 2 },
+            Mistral: { color: '#dc2626', emoji: '🔴', provider: 'Mistral AI', order: 3 }
         };
+        
+        const AI_ORDER = ['Claude', 'ChatGPT', 'DeepSeek', 'Mistral'];
 
         let appState = { rooms: {}, currentRoomId: null, currentAI: 'Claude' };
         let userSession = { isAuthenticated: false, email: null };
-        let startAI = 'Claude'; // AI to start new room with
+        let startAI = 'Claude';
+        let tokenCount = 0; // Approximate token count
 
         function loadState() {
             const saved = localStorage.getItem('appState');
@@ -216,7 +234,7 @@
                 return `
                     <div class="room-card" onclick="openRoom('${room.id}')">
                         <div class="room-card-title">${room.name}</div>
-                        <div class="room-card-meta">${config.emoji} ${config.provider} • ${room.messages.length} messages</div>
+                        <div class="room-card-meta">${config.emoji} ${config.provider} • ${room.messages.length} messages • Tokens: ${room.tokenCount || 0}</div>
                     </div>
                 `;
             }).join('');
@@ -251,6 +269,8 @@
                 name: name,
                 messages: [],
                 currentAI: startAI,
+                tokenCount: 0,
+                aiHistory: [startAI],
                 createdAt: new Date().toISOString()
             };
             
@@ -263,10 +283,12 @@
             appState.currentRoomId = roomId;
             const room = appState.rooms[roomId];
             appState.currentAI = room.currentAI || 'Claude';
+            tokenCount = room.tokenCount || 0;
             saveState();
             
             document.getElementById('chatTitle').textContent = room.name;
             document.getElementById('aiSelector').value = appState.currentAI;
+            updateTokenIndicator();
             renderMessages();
             
             showScreen('chatScreen');
@@ -284,6 +306,62 @@
             renderMessages();
         }
 
+        function updateTokenIndicator() {
+            const indicator = document.getElementById('tokenIndicator');
+            const limit = TOKEN_LIMITS[appState.currentAI];
+            const percentage = (tokenCount / limit) * 100;
+            
+            indicator.textContent = `Tokens: ${tokenCount.toLocaleString()}/${limit.toLocaleString()}`;
+            
+            if (percentage >= 95) {
+                indicator.classList.remove('warning');
+                indicator.classList.add('critical');
+            } else if (percentage >= 80) {
+                indicator.classList.remove('critical');
+                indicator.classList.add('warning');
+            } else {
+                indicator.classList.remove('warning', 'critical');
+            }
+        }
+
+        function getNextAI() {
+            const currentIndex = AI_ORDER.indexOf(appState.currentAI);
+            if (currentIndex === -1) return 'Claude';
+            const nextIndex = (currentIndex + 1) % AI_ORDER.length;
+            return AI_ORDER[nextIndex];
+        }
+
+        async function autoSwitchAI() {
+            const limit = TOKEN_LIMITS[appState.currentAI];
+            if (tokenCount >= limit) {
+                const nextAI = getNextAI();
+                const room = appState.rooms[appState.currentRoomId];
+                
+                // Add system message
+                room.messages.push({
+                    type: 'system',
+                    text: `Token limit reached! Automatically switched from ${appState.currentAI} to ${nextAI}.`,
+                    timestamp: new Date().toISOString()
+                });
+                
+                // Switch AI
+                appState.currentAI = nextAI;
+                room.currentAI = nextAI;
+                if (!room.aiHistory) room.aiHistory = [];
+                room.aiHistory.push(nextAI);
+                
+                document.getElementById('aiSelector').value = nextAI;
+                renderMessages();
+                return true;
+            }
+            return false;
+        }
+
+        function estimateTokens(text) {
+            // Rough approximation: ~4 characters = 1 token
+            return Math.ceil(text.length / 4);
+        }
+
         function renderMessages() {
             const room = appState.rooms[appState.currentRoomId];
             const area = document.getElementById('messagesArea');
@@ -294,7 +372,9 @@
             }
 
             area.innerHTML = room.messages.map(msg => {
-                if (msg.type === 'user') {
+                if (msg.type === 'system') {
+                    return `<div class="message system"><div class="message-bubble">ℹ️ ${escapeHtml(msg.text)}</div></div>`;
+                } else if (msg.type === 'user') {
                     return `<div class="message user"><div class="message-bubble">${escapeHtml(msg.text)}</div></div>`;
                 } else {
                     const config = AI_CONFIGS[msg.ai] || AI_CONFIGS['Claude'];
@@ -318,6 +398,10 @@
             if (!text) return;
 
             const room = appState.rooms[appState.currentRoomId];
+            
+            // Add tokens from user message
+            tokenCount += estimateTokens(text);
+            
             room.messages.push({
                 type: 'user',
                 text: text,
@@ -329,12 +413,17 @@
             sendBtn.disabled = true;
             renderMessages();
 
+            // Check if we need to auto-switch
+            if (await autoSwitchAI()) {
+                renderMessages();
+            }
+
             try {
                 const response = await fetch(`${API_URL}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        messages: room.messages.map(m => ({
+                        messages: room.messages.filter(m => m.type !== 'system').map(m => ({
                             role: m.type === 'user' ? 'user' : 'assistant',
                             content: m.text
                         })),
@@ -347,10 +436,15 @@
                 }
 
                 const data = await response.json();
+                const aiResponse = data.content;
+                
+                // Add tokens from AI response
+                tokenCount += estimateTokens(aiResponse);
+                
                 room.messages.push({
                     type: 'ai',
                     ai: appState.currentAI,
-                    text: data.content,
+                    text: aiResponse,
                     timestamp: new Date().toISOString()
                 });
 
@@ -359,13 +453,15 @@
                 room.messages.push({
                     type: 'ai',
                     ai: appState.currentAI,
-                    text: `⚠️ Server not connected\n\nError: ${error.message}\n\nMake sure backend is running at ${API_URL}`,
+                    text: `⚠️ Server error\n\n${error.message}`,
                     timestamp: new Date().toISOString()
                 });
             }
 
+            room.tokenCount = tokenCount;
             saveState();
             renderMessages();
+            updateTokenIndicator();
             input.disabled = false;
             sendBtn.disabled = false;
             input.focus();
