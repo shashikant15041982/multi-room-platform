@@ -33,14 +33,19 @@
         .chat-header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
         .chat-header-left button { padding: 8px 12px; background: #f5f5f5; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; min-width: 40px; }
         .chat-header-title { font-weight: 600; font-size: 16px; color: #333; min-width: 0; word-break: break-word; }
-        .ai-indicator { font-size: 12px; padding: 4px 10px; background: #f5f5f5; border-radius: 20px; white-space: nowrap; }
+        .ai-selector { font-size: 12px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; white-space: nowrap; }
         .messages-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
         .message { display: flex; word-wrap: break-word; }
         .message.user { justify-content: flex-end; }
         .message-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
         .message.user .message-bubble { background: #667eea; color: white; }
-        .message.ai .message-bubble { background: #f0f0f0; color: #333; }
-        .message-ai-name { font-size: 11px; color: #999; margin-bottom: 4px; }
+        .message.ai .message-bubble { background: #f0f0f0; color: #333; border-left: 3px solid #ddd; }
+        .message-ai-info { font-size: 11px; color: #666; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .ai-badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .ai-claude { background: #e8e4f3; color: #667eea; }
+        .ai-chatgpt { background: #e8f4e8; color: #10a937; }
+        .ai-deepseek { background: #fef3e8; color: #d97706; }
+        .ai-mistral { background: #fee8e8; color: #dc2626; }
         .empty-chat { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #999; gap: 10px; text-align: center; }
         .empty-chat-icon { font-size: 48px; opacity: 0.5; }
         .input-area { padding: 12px 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; flex-shrink: 0; background: white; }
@@ -49,13 +54,19 @@
         .input-area button:disabled { opacity: 0.6; cursor: not-allowed; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         .modal.active { display: flex; }
-        .modal-box { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; }
+        .modal-box { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
         .modal-box h2 { font-size: 18px; color: #333; margin-bottom: 20px; }
         .modal-box input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 20px; font-family: inherit; }
         .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
         .modal-buttons button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
         .btn-cancel { background: #f5f5f5; color: #333; }
         .btn-confirm { background: #667eea; color: white; }
+        .ai-selector-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .ai-option { padding: 12px; border: 2px solid #ddd; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .ai-option:active { transform: scale(0.95); }
+        .ai-option.selected { border-color: #667eea; background: #f0f0ff; }
+        .ai-option-name { font-weight: 600; margin-bottom: 4px; }
+        .ai-option-desc { font-size: 12px; color: #999; }
     </style>
 </head>
 <body>
@@ -63,7 +74,7 @@
         <div class="login-box">
             <h1>💬</h1>
             <h1>AI Chat Workspace</h1>
-            <p>Real AI chat with Claude in organized rooms</p>
+            <p>Multi-AI chat with Claude, ChatGPT, DeepSeek & Mistral</p>
             <input type="email" id="emailInput" placeholder="Enter email" autofocus>
             <button onclick="handleLogin()">Sign In</button>
         </div>
@@ -89,12 +100,17 @@
                 <button onclick="goToRoomList()">← Back</button>
                 <div class="chat-header-title" id="chatTitle">Chat</div>
             </div>
-            <div class="ai-indicator" id="aiIndicator">Claude</div>
+            <select class="ai-selector" id="aiSelector" onchange="switchAI()">
+                <option value="Claude">🟣 Claude</option>
+                <option value="ChatGPT">🟢 ChatGPT</option>
+                <option value="DeepSeek">🟠 DeepSeek</option>
+                <option value="Mistral">🔴 Mistral</option>
+            </select>
         </div>
         <div class="messages-area" id="messagesArea">
             <div class="empty-chat">
                 <div class="empty-chat-icon">💬</div>
-                <div>Start chatting with Claude</div>
+                <div>Start chatting</div>
             </div>
         </div>
         <div class="input-area">
@@ -106,7 +122,26 @@
     <div id="newRoomModal" class="modal">
         <div class="modal-box">
             <h2>Create New Room</h2>
-            <input type="text" id="roomNameInput" placeholder="Room name" autofocus>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Which AI would you like to start with?</p>
+            <div class="ai-selector-modal" id="aiSelectorModal">
+                <div class="ai-option selected" data-ai="Claude" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟣 Claude</div>
+                    <div class="ai-option-desc">Anthropic</div>
+                </div>
+                <div class="ai-option" data-ai="ChatGPT" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟢 ChatGPT</div>
+                    <div class="ai-option-desc">OpenAI</div>
+                </div>
+                <div class="ai-option" data-ai="DeepSeek" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟠 DeepSeek</div>
+                    <div class="ai-option-desc">DeepSeek</div>
+                </div>
+                <div class="ai-option" data-ai="Mistral" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🔴 Mistral</div>
+                    <div class="ai-option-desc">Mistral AI</div>
+                </div>
+            </div>
+            <input type="text" id="roomNameInput" placeholder="Room name (e.g., 'Python Help')" autofocus>
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="closeNewRoomModal()">Cancel</button>
                 <button class="btn-confirm" onclick="createRoom()">Create</button>
@@ -115,12 +150,20 @@
     </div>
 
     <script>
-        // CONFIG - Change this to your backend URL
-        const API_URL = 'http://localhost:3000'; // Local dev
-        // For production, use: const API_URL = 'https://your-replit-name.replit.dev';
+        // CONFIG
+        const API_URL = 'http://localhost:3000'; // Change to Replit URL when deployed
+        
+        // AI CONFIGS
+        const AI_CONFIGS = {
+            Claude: { color: '#667eea', emoji: '🟣', provider: 'Anthropic' },
+            ChatGPT: { color: '#10a937', emoji: '🟢', provider: 'OpenAI' },
+            DeepSeek: { color: '#d97706', emoji: '🟠', provider: 'DeepSeek' },
+            Mistral: { color: '#dc2626', emoji: '🔴', provider: 'Mistral AI' }
+        };
 
         let appState = { rooms: {}, currentRoomId: null, currentAI: 'Claude' };
         let userSession = { isAuthenticated: false, email: null };
+        let startAI = 'Claude'; // AI to start new room with
 
         function loadState() {
             const saved = localStorage.getItem('appState');
@@ -167,15 +210,22 @@
                 container.innerHTML = '<div class="empty-rooms"><div class="empty-rooms-icon">🚀</div><div>No rooms yet. Create one!</div></div>';
                 return;
             }
-            container.innerHTML = rooms.map(room => `
-                <div class="room-card" onclick="openRoom('${room.id}')">
-                    <div class="room-card-title">${room.name}</div>
-                    <div class="room-card-meta">${room.messages.length} messages</div>
-                </div>
-            `).join('');
+            container.innerHTML = rooms.map(room => {
+                const ai = room.currentAI || 'Claude';
+                const config = AI_CONFIGS[ai];
+                return `
+                    <div class="room-card" onclick="openRoom('${room.id}')">
+                        <div class="room-card-title">${room.name}</div>
+                        <div class="room-card-meta">${config.emoji} ${config.provider} • ${room.messages.length} messages</div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function showNewRoomModal() {
+            startAI = 'Claude';
+            document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector('[data-ai="Claude"]').classList.add('selected');
             document.getElementById('newRoomModal').classList.add('active');
             document.getElementById('roomNameInput').focus();
         }
@@ -185,11 +235,25 @@
             document.getElementById('roomNameInput').value = '';
         }
 
+        function selectStartAI(element) {
+            document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            startAI = element.getAttribute('data-ai');
+        }
+
         function createRoom() {
             const name = document.getElementById('roomNameInput').value.trim();
             if (!name) { alert('Enter room name'); return; }
+            
             const id = 'room-' + Date.now();
-            appState.rooms[id] = { id: id, name: name, messages: [], createdAt: new Date().toISOString() };
+            appState.rooms[id] = {
+                id: id,
+                name: name,
+                messages: [],
+                currentAI: startAI,
+                createdAt: new Date().toISOString()
+            };
+            
             saveState();
             closeNewRoomModal();
             openRoom(id);
@@ -197,30 +261,53 @@
 
         function openRoom(roomId) {
             appState.currentRoomId = roomId;
-            appState.currentAI = 'Claude';
-            saveState();
             const room = appState.rooms[roomId];
+            appState.currentAI = room.currentAI || 'Claude';
+            saveState();
+            
             document.getElementById('chatTitle').textContent = room.name;
-            document.getElementById('aiIndicator').textContent = appState.currentAI;
+            document.getElementById('aiSelector').value = appState.currentAI;
             renderMessages();
+            
             showScreen('chatScreen');
             document.getElementById('messageInput').focus();
+        }
+
+        function switchAI() {
+            const selected = document.getElementById('aiSelector').value;
+            const room = appState.rooms[appState.currentRoomId];
+            
+            appState.currentAI = selected;
+            room.currentAI = selected;
+            saveState();
+            
+            renderMessages();
         }
 
         function renderMessages() {
             const room = appState.rooms[appState.currentRoomId];
             const area = document.getElementById('messagesArea');
+            
             if (room.messages.length === 0) {
-                area.innerHTML = '<div class="empty-chat"><div class="empty-chat-icon">💬</div><div>Start chatting with Claude</div></div>';
+                area.innerHTML = '<div class="empty-chat"><div class="empty-chat-icon">💬</div><div>Start chatting</div></div>';
                 return;
             }
+
             area.innerHTML = room.messages.map(msg => {
                 if (msg.type === 'user') {
                     return `<div class="message user"><div class="message-bubble">${escapeHtml(msg.text)}</div></div>`;
                 } else {
-                    return `<div class="message ai"><div class="message-ai-name">${msg.ai}</div><div class="message-bubble">${escapeHtml(msg.text)}</div></div>`;
+                    const config = AI_CONFIGS[msg.ai] || AI_CONFIGS['Claude'];
+                    const badge = `<span class="ai-badge ai-${msg.ai.toLowerCase()}">${config.emoji} ${config.provider}</span>`;
+                    return `
+                        <div class="message ai">
+                            <div class="message-ai-info">${badge}</div>
+                            <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                        </div>
+                    `;
                 }
             }).join('');
+            
             area.scrollTop = area.scrollHeight;
         }
 
@@ -231,7 +318,11 @@
             if (!text) return;
 
             const room = appState.rooms[appState.currentRoomId];
-            room.messages.push({ type: 'user', text: text, timestamp: new Date().toISOString() });
+            room.messages.push({
+                type: 'user',
+                text: text,
+                timestamp: new Date().toISOString()
+            });
 
             input.value = '';
             input.disabled = true;
@@ -246,7 +337,8 @@
                         messages: room.messages.map(m => ({
                             role: m.type === 'user' ? 'user' : 'assistant',
                             content: m.text
-                        }))
+                        })),
+                        ai: appState.currentAI
                     })
                 });
 
@@ -257,7 +349,7 @@
                 const data = await response.json();
                 room.messages.push({
                     type: 'ai',
-                    ai: 'Claude',
+                    ai: appState.currentAI,
                     text: data.content,
                     timestamp: new Date().toISOString()
                 });
@@ -266,8 +358,8 @@
                 console.error('Error:', error);
                 room.messages.push({
                     type: 'ai',
-                    ai: 'Claude',
-                    text: `⚠️ Cannot connect to server. Is it running?\n\nError: ${error.message}`,
+                    ai: appState.currentAI,
+                    text: `⚠️ Server not connected\n\nError: ${error.message}\n\nMake sure backend is running at ${API_URL}`,
                     timestamp: new Date().toISOString()
                 });
             }
