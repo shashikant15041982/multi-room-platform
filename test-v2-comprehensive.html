@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Workspace v2 - Comprehensive Test Suite</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        h1 { color: #667eea; margin-bottom: 30px; }
+        .test-section { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; border-left: 4px solid #667eea; }
+        .test-title { font-size: 18px; font-weight: 600; margin-bottom: 15px; color: #333; }
+        .test-item { padding: 10px; margin: 8px 0; background: #f9f9f9; border-radius: 4px; font-size: 14px; }
+        .pass { background: #d4edda; color: #155724; border-left: 3px solid #28a745; }
+        .fail { background: #f8d7da; color: #721c24; border-left: 3px solid #dc3545; }
+        .pending { background: #fff3cd; color: #856404; border-left: 3px solid #ffc107; }
+        .code-block { background: #f4f4f4; padding: 12px; border-radius: 4px; overflow-x: auto; font-size: 12px; margin: 10px 0; }
+        .progress-bar { height: 30px; background: #ddd; border-radius: 4px; overflow: hidden; margin: 15px 0; }
+        .progress-fill { height: 100%; background: #28a745; transition: width 0.3s; display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; }
+        .summary { background: #667eea; color: white; padding: 20px; border-radius: 8px; margin-top: 30px; }
+        .summary h2 { margin-bottom: 15px; }
+        button { padding: 10px 20px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; margin: 5px; }
+        button:hover { background: #5568d3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Chat Workspace v2 - Comprehensive Test Suite</h1>
+        
+        <div id="testOutput"></div>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <button onclick="runAllTests()">▶ RUN ALL TESTS</button>
+            <button onclick="clearResults()">🔄 CLEAR RESULTS</button>
+        </div>
+    </div>
+
+    <script>
+        const testResults = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            pending: 0,
+            tests: []
+        };
+
+        function addTest(category, name, result, details = '') {
+            testResults.tests.push({ category, name, result, details });
+            testResults.total++;
+            if (result === 'pass') testResults.passed++;
+            else if (result === 'fail') testResults.failed++;
+            else if (result === 'pending') testResults.pending++;
+        }
+
+        function renderResults() {
+            const output = document.getElementById('testOutput');
+            let html = '';
+            
+            const categories = [...new Set(testResults.tests.map(t => t.category))];
+            
+            categories.forEach(category => {
+                const categoryTests = testResults.tests.filter(t => t.category === category);
+                html += `<div class="test-section">
+                    <div class="test-title">📋 ${category}</div>`;
+                
+                categoryTests.forEach(test => {
+                    const className = test.result === 'pass' ? 'pass' : test.result === 'fail' ? 'fail' : 'pending';
+                    const icon = test.result === 'pass' ? '✅' : test.result === 'fail' ? '❌' : '⏳';
+                    html += `<div class="test-item ${className}">
+                        ${icon} ${test.name}
+                        ${test.details ? `<br><small>${test.details}</small>` : ''}
+                    </div>`;
+                });
+                
+                html += '</div>';
+            });
+
+            const percentage = testResults.total > 0 ? Math.round((testResults.passed / testResults.total) * 100) : 0;
+            
+            html += `<div class="summary">
+                <h2>📊 Test Results Summary</h2>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px;">
+                    <div>
+                        <div style="font-size: 24px; font-weight: bold;">${testResults.total}</div>
+                        <div>Total Tests</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: bold; color: #28a745;">${testResults.passed}</div>
+                        <div>Passed ✅</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: bold; color: #dc3545;">${testResults.failed}</div>
+                        <div>Failed ❌</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 24px; font-weight: bold; color: #ffc107;">${testResults.pending}</div>
+                        <div>Pending ⏳</div>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: ${percentage}%;">${percentage}%</div>
+                </div>
+                <p style="margin-top: 15px;">
+                    <strong>Status:</strong> 
+                    ${testResults.failed === 0 ? '✅ ALL TESTS PASSED!' : `❌ ${testResults.failed} test(s) need attention`}
+                </p>
+            </div>`;
+            
+            output.innerHTML = html;
+        }
+
+        function clearResults() {
+            testResults.total = 0;
+            testResults.passed = 0;
+            testResults.failed = 0;
+            testResults.pending = 0;
+            testResults.tests = [];
+            document.getElementById('testOutput').innerHTML = '';
+        }
+
+        async function runAllTests() {
+            clearResults();
+            
+            // Test 1: File Existence
+            await testFileExistence();
+            
+            // Test 2: HTML Structure
+            await testHTMLStructure();
+            
+            // Test 3: CSS & Styling
+            await testStyling();
+            
+            // Test 4: JavaScript Functionality
+            await testJavaScriptFunctionality();
+            
+            // Test 5: Local Storage
+            await testLocalStorage();
+            
+            // Test 6: Room Management
+            await testRoomManagement();
+            
+            // Test 7: Chat Interface
+            await testChatInterface();
+            
+            // Test 8: AI Helpers
+            await testAIHelpers();
+            
+            // Test 9: Message Handling
+            await testMessageHandling();
+            
+            // Test 10: UI Responsiveness
+            await testUIResponsiveness();
+            
+            // Test 11: Navigation
+            await testNavigation();
+            
+            // Test 12: Data Persistence
+            await testDataPersistence();
+            
+            renderResults();
+        }
+
+        // ============= TEST SUITES =============
+
+        async function testFileExistence() {
+            const response = await fetch('index-v2-chat-focused.html');
+            if (response.ok) {
+                addTest('File Existence', 'index-v2-chat-focused.html exists', 'pass');
+                const content = await response.text();
+                if (content.length > 500) {
+                    addTest('File Existence', 'HTML file has content (>500 chars)', 'pass', `File size: ${content.length} bytes`);
+                } else {
+                    addTest('File Existence', 'HTML file has sufficient content', 'fail', `File size: ${content.length} bytes (too small)`);
+                }
+            } else {
+                addTest('File Existence', 'index-v2-chat-focused.html exists', 'fail', `HTTP ${response.status}`);
+            }
+        }
+
+        async function testHTMLStructure() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Has DOCTYPE', pattern: /<!DOCTYPE html>/i },
+                { name: 'Has meta viewport', pattern: /<meta name="viewport"/i },
+                { name: 'Has title', pattern: /<title>.*?<\/title>/i },
+                { name: 'Has app container', pattern: /id=["']app["']/i },
+                { name: 'Has header element', pattern: /class=["']header["']/i },
+                { name: 'Has sidebar', pattern: /id=["']sidebar["']/i },
+                { name: 'Has chat area', pattern: /class=["']chat-area["']/i },
+                { name: 'Has messages container', pattern: /id=["']messages["']/i },
+                { name: 'Has input field', pattern: /id=["']messageInput["']/i },
+                { name: 'Has send button', pattern: /id=["']sendBtn["']/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('HTML Structure', `Has ${check.name}`, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testStyling() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Has CSS styles', pattern: /<style[^>]*>[\s\S]+?<\/style>/i },
+                { name: 'Has flexbox layout', pattern: /display:\s*flex/i },
+                { name: 'Has responsive design', pattern: /@media\s*\(max-width/i },
+                { name: 'Has color variables', pattern: /--primary|--dark|--light/i },
+                { name: 'Has button styling', pattern: /\.btn\s*{/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('CSS & Styling', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testJavaScriptFunctionality() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Has JavaScript code', pattern: /<script[\s\S]*?<\/script>/i },
+                { name: 'Has state object', pattern: /const appState = {/i },
+                { name: 'Has init function', pattern: /function init\(\)/i },
+                { name: 'Has saveState function', pattern: /function saveState\(\)/i },
+                { name: 'Has loadState function', pattern: /function loadState\(\)/i },
+                { name: 'Has sendMessage function', pattern: /function sendMessage\(\)/i },
+                { name: 'Has renderChat function', pattern: /function renderChat\(\)/i },
+                { name: 'Has AI switching logic', pattern: /checkAISwitch/i },
+                { name: 'Has room creation', pattern: /function createRoom\(\)/i },
+                { name: 'Has room selection', pattern: /function selectRoom\(/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('JavaScript Functionality', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testLocalStorage() {
+            try {
+                localStorage.setItem('test', 'value');
+                const retrieved = localStorage.getItem('test');
+                
+                if (retrieved === 'value') {
+                    addTest('Local Storage', 'localStorage write/read', 'pass');
+                } else {
+                    addTest('Local Storage', 'localStorage write/read', 'fail', 'Value mismatch');
+                }
+                
+                localStorage.removeItem('test');
+                addTest('Local Storage', 'localStorage delete', 'pass');
+            } catch (e) {
+                addTest('Local Storage', 'localStorage available', 'fail', e.message);
+            }
+        }
+
+        async function testRoomManagement() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'appState.rooms object', pattern: /appState\.rooms = {}/i },
+                { name: 'Room has id property', pattern: /id:\s*roomId/i },
+                { name: 'Room has name property', pattern: /name:\s*name/i },
+                { name: 'Room has messages array', pattern: /messages:\s*\[\]/i },
+                { name: 'Create room modal', pattern: /id=["']newRoomModal["']/i },
+                { name: 'New room button', pattern: /onclick=["']openNewRoomModal\(\)["']/i },
+                { name: 'Render rooms function', pattern: /function renderRooms\(\)/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('Room Management', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testChatInterface() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Chat title element', pattern: /id=["']chatTitle["']/i },
+                { name: 'Messages display area', pattern: /id=["']messages["']/i },
+                { name: 'Message input field', pattern: /id=["']messageInput["']/i },
+                { name: 'Send button', pattern: /id=["']sendBtn["']/i },
+                { name: 'Render messages function', pattern: /function renderMessages\(\)/i },
+                { name: 'Message scroll behavior', pattern: /scrollTop = scrollHeight/i },
+                { name: 'Empty state UI', pattern: /class=["']empty-state["']/i },
+                { name: 'Message animations', pattern: /@keyframes slideIn/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('Chat Interface', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testAIHelpers() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Has AI helpers array', pattern: /aiHelpers:\s*\[/i },
+                { name: 'Claude AI helper', pattern: /'claude'|"claude"/i },
+                { name: 'ChatGPT AI helper', pattern: /'gpt'|"gpt"/i },
+                { name: 'DeepSeek AI helper', pattern: /'deepseek'|"deepseek"/i },
+                { name: 'Mistral AI helper', pattern: /'mistral'|"mistral"/i },
+                { name: 'AI indicator element', pattern: /id=["']aiIndicator["']/i },
+                { name: 'AI dot indicator', pattern: /id=["']aiDot["']/i },
+                { name: 'AI name display', pattern: /id=["']aiName["']/i },
+                { name: 'AI switching logic', pattern: /checkAISwitch/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('AI Helpers', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testMessageHandling() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Message type: user', pattern: /type:\s*["']user["']/i },
+                { name: 'Message type: ai', pattern: /type:\s*["']ai["']/i },
+                { name: 'Message text field', pattern: /text:\s*text/i },
+                { name: 'Message timestamp', pattern: /timestamp:/i },
+                { name: 'Send message function', pattern: /function sendMessage\(\)/i },
+                { name: 'Message content escape', pattern: /escapeHtml/i },
+                { name: 'Key press handler', pattern: /handleKeyPress/i },
+                { name: 'Message rendering template', pattern: /class=["']message-content["']/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('Message Handling', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testUIResponsiveness() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Mobile media query', pattern: /@media\s*\(max-width:\s*768px\)/i },
+                { name: 'Flex layout for main container', pattern: /display:\s*flex[\s\S]*?flex-direction:/i },
+                { name: 'Sidebar toggle button', pattern: /toggleSidebar/i },
+                { name: 'Responsive input', pattern: /width:\s*100%/i },
+                { name: 'Touch-friendly buttons', pattern: /padding:\s*[0-9]+px [0-9]+px/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('UI Responsiveness', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testNavigation() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Login function', pattern: /function login\(\)/i },
+                { name: 'Logout function', pattern: /function logout\(\)/i },
+                { name: 'Select room function', pattern: /function selectRoom\(/i },
+                { name: 'Toggle sidebar function', pattern: /function toggleSidebar\(\)/i },
+                { name: 'Logout button', pattern: /onclick=["']logout\(\)["']/i },
+                { name: 'Room list rendering', pattern: /roomsList\.innerHTML/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('Navigation', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        async function testDataPersistence() {
+            const response = await fetch('index-v2-chat-focused.html');
+            const html = await response.text();
+            
+            const checks = [
+                { name: 'Save state to localStorage', pattern: /localStorage\.setItem\(['"]appState/i },
+                { name: 'Load state from localStorage', pattern: /localStorage\.getItem\(['"]appState/i },
+                { name: 'Save user session', pattern: /localStorage\.setItem\(['"]userSession/i },
+                { name: 'Load user session', pattern: /localStorage\.getItem\(['"]userSession/i },
+                { name: 'State serialization (JSON.stringify)', pattern: /JSON\.stringify/i },
+                { name: 'State deserialization (JSON.parse)', pattern: /JSON\.parse/i }
+            ];
+            
+            checks.forEach(check => {
+                addTest('Data Persistence', check.name, check.pattern.test(html) ? 'pass' : 'fail');
+            });
+        }
+
+        // Run tests on page load
+        window.addEventListener('load', () => {
+            console.log('Test suite ready. Click "RUN ALL TESTS" to start.');
+        });
+    </script>
+</body>
+</html>
