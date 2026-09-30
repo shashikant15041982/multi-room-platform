@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Workspace — Phase 23</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: white; overflow: hidden; }
+        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; background: white; }
+        .screen.active { display: flex; }
+        #loginScreen { justify-content: center; align-items: center; padding: 20px; }
+        .login-box { width: 100%; max-width: 400px; text-align: center; }
+        .login-box h1 { font-size: 28px; color: #667eea; margin-bottom: 10px; }
+        .login-box p { color: #666; margin-bottom: 30px; font-size: 14px; }
+        .login-box input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; font-family: inherit; }
+        .login-box button { width: 100%; padding: 14px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        #roomListScreen { flex-direction: column; padding: 15px; }
+        .room-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #667eea; }
+        .room-list-header h1 { font-size: 20px; color: #667eea; }
+        .room-list-header button { padding: 10px 16px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .rooms-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .room-card { padding: 16px; background: #f5f5f5; border-radius: 8px; cursor: pointer; border-left: 4px solid #667eea; transition: all 0.2s; user-select: none; }
+        .room-card:active { background: #e8e8e8; transform: scale(0.98); }
+        .room-card-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; color: #333; }
+        .room-card-meta { font-size: 12px; color: #999; }
+        .empty-rooms { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; color: #999; text-align: center; }
+        .empty-rooms-icon { font-size: 48px; opacity: 0.5; }
+        .logout-btn { padding: 12px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; color: #333; margin-top: auto; }
+        #chatScreen { flex-direction: column; }
+        .chat-layout { display: flex; flex: 1; min-height: 0; }
+        .chat-main { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+        .file-sidebar { width: 250px; border-left: 1px solid #ddd; background: #fafafa; overflow-y: auto; display: flex; flex-direction: column; }
+        .file-sidebar.hidden { display: none; }
+        .file-sidebar-header { padding: 12px; border-bottom: 1px solid #ddd; font-weight: 600; font-size: 14px; color: #333; display: flex; justify-content: space-between; align-items: center; }
+        .file-sidebar-toggle { cursor: pointer; font-size: 16px; }
+        .file-list { flex: 1; padding: 10px; overflow-y: auto; }
+        .file-item-sidebar { padding: 8px 10px; background: white; border-radius: 6px; margin-bottom: 8px; border: 1px solid #ddd; font-size: 12px; cursor: pointer; transition: all 0.2s; }
+        .file-item-sidebar:hover { background: #f0f0f0; border-color: #667eea; }
+        .file-item-sidebar.selected { background: #e8e4f3; border-color: #667eea; }
+        .file-item-name { font-weight: 500; color: #333; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+        .file-item-type { font-size: 11px; color: #999; }
+        .file-item-actions { display: flex; gap: 4px; margin-top: 6px; }
+        .file-item-btn { padding: 3px 6px; font-size: 10px; background: #667eea; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        .file-item-btn.delete { background: #dc2626; }
+        .chat-header { padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: white; flex-wrap: wrap; gap: 10px; }
+        .chat-header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .chat-header-left button { padding: 8px 12px; background: #f5f5f5; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; min-width: 40px; }
+        .chat-header-title { font-weight: 600; font-size: 16px; color: #333; min-width: 0; word-break: break-word; }
+        .ai-selector { font-size: 12px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+        .token-indicator { font-size: 11px; padding: 4px 8px; background: #e8f4e8; border-radius: 4px; color: #10a937; font-weight: 600; }
+        .token-indicator.warning { background: #fef3e8; color: #d97706; }
+        .token-indicator.critical { background: #fee8e8; color: #dc2626; }
+        .messages-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .message { display: flex; word-wrap: break-word; position: relative; }
+        .message.user { justify-content: flex-end; }
+        .message.system { justify-content: center; }
+        .message:hover .message-actions { opacity: 1; }
+        .message-actions { opacity: 0; transition: opacity 0.2s; display: flex; gap: 4px; position: absolute; top: -25px; right: 0; z-index: 10; }
+        .message-actions button { padding: 4px 8px; font-size: 11px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .message-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
+        .message.user .message-bubble { background: #667eea; color: white; }
+        .message.ai .message-bubble { background: #f0f0f0; color: #333; border-left: 3px solid #ddd; }
+        .message.system .message-bubble { background: #f0f8ff; color: #0066cc; font-size: 12px; max-width: 90%; text-align: center; padding: 8px 12px; }
+        .message-ai-info { font-size: 11px; color: #666; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+        .ai-badge { display: inline-block; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .ai-claude { background: #e8e4f3; color: #667eea; }
+        .ai-chatgpt { background: #e8f4e8; color: #10a937; }
+        .ai-deepseek { background: #fef3e8; color: #d97706; }
+        .ai-mistral { background: #fee8e8; color: #dc2626; }
+        .file-message { background: #f9f9f9; border: 1px solid #ddd; }
+        .file-preview { margin-top: 8px; }
+        .file-preview-image { max-width: 200px; max-height: 200px; border-radius: 6px; }
+        .empty-chat { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #999; gap: 10px; text-align: center; }
+        .empty-chat-icon { font-size: 48px; opacity: 0.5; }
+        .input-area { padding: 12px 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; flex-shrink: 0; background: white; flex-wrap: wrap; }
+        .input-area input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; min-width: 150px; }
+        .input-buttons { display: flex; gap: 5px; }
+        .input-area button { padding: 10px 12px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; white-space: nowrap; }
+        .input-area button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .file-input-hidden { display: none; }
+        .drag-overlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(102, 126, 234, 0.1); border: 2px dashed #667eea; border-radius: 8px; justify-content: center; align-items: center; font-weight: 600; color: #667eea; z-index: 100; }
+        .drag-overlay.active { display: flex; }
+        .export-buttons { display: flex; gap: 8px; padding: 10px 15px; border-top: 1px solid #ddd; background: #f9f9f9; flex-wrap: wrap; }
+        .export-buttons button { padding: 8px 12px; background: white; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; color: #333; }
+        .export-buttons button:hover { background: #f0f0f0; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-box { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        .modal-box h2 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        .modal-box input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 20px; font-family: inherit; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-buttons button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-cancel { background: #f5f5f5; color: #333; }
+        .btn-confirm { background: #667eea; color: white; }
+        .ai-selector-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .ai-option { padding: 12px; border: 2px solid #ddd; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .ai-option:active { transform: scale(0.95); }
+        .ai-option.selected { border-color: #667eea; background: #f0f0ff; }
+        .ai-option-name { font-weight: 600; margin-bottom: 4px; }
+        .ai-option-desc { font-size: 12px; color: #999; }
+        @media (max-width: 768px) {
+            .file-sidebar { width: 200px; }
+            .chat-header { flex-direction: column; align-items: flex-start; }
+            .message-bubble { max-width: 90%; }
+        }
+        @media (max-width: 600px) {
+            .file-sidebar { display: none; }
+            .file-sidebar-header button { display: block; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginScreen" class="screen active">
+        <div class="login-box">
+            <h1>💬</h1>
+            <h1>AI Chat Workspace</h1>
+            <p>Phase 23: Drag-drop files, image preview, PDF extract</p>
+            <input type="email" id="emailInput" placeholder="Enter email" autofocus>
+            <button onclick="handleLogin()">Sign In</button>
+        </div>
+    </div>
+
+    <div id="roomListScreen" class="screen">
+        <div class="room-list-header">
+            <h1>📋 My Rooms</h1>
+            <button onclick="showNewRoomModal()">+ New</button>
+        </div>
+        <div class="rooms-container" id="roomsContainer">
+            <div class="empty-rooms">
+                <div class="empty-rooms-icon">🚀</div>
+                <div>No rooms yet. Create one!</div>
+            </div>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+
+    <div id="chatScreen" class="screen">
+        <div class="chat-layout">
+            <div class="chat-main">
+                <div class="chat-header">
+                    <div class="chat-header-left">
+                        <button onclick="goToRoomList()">← Back</button>
+                        <div class="chat-header-title" id="chatTitle">Chat</div>
+                    </div>
+                    <select class="ai-selector" id="aiSelector" onchange="switchAI()">
+                        <option value="Claude">🟣 Claude</option>
+                        <option value="ChatGPT">🟢 ChatGPT</option>
+                        <option value="DeepSeek">🟠 DeepSeek</option>
+                        <option value="Mistral">🔴 Mistral</option>
+                    </select>
+                    <div class="token-indicator" id="tokenIndicator">Tokens: 0</div>
+                    <button onclick="toggleFileSidebar()" title="Toggle files">📂</button>
+                </div>
+                <div class="messages-area" id="messagesArea" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <div class="drag-overlay" id="dragOverlay">📎 Drop file to upload</div>
+                    <div class="empty-chat">
+                        <div class="empty-chat-icon">💬</div>
+                        <div>Start chatting</div>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <input type="text" id="messageInput" placeholder="Type message..." autocomplete="off">
+                    <div class="input-buttons">
+                        <button onclick="triggerFileUpload()" title="Attach file">📎</button>
+                        <button id="sendBtn" onclick="sendMessage()">Send</button>
+                    </div>
+                    <input type="file" id="fileInput" class="file-input-hidden" onchange="handleFileSelect()">
+                </div>
+                <div class="export-buttons">
+                    <button onclick="exportPDF()">📄 PDF</button>
+                    <button onclick="exportTXT()">📝 TXT</button>
+                    <button onclick="exportMD()">📖 MD</button>
+                    <button onclick="exportJSON()">⚙️ JSON</button>
+                </div>
+            </div>
+            <div class="file-sidebar" id="fileSidebar">
+                <div class="file-sidebar-header">
+                    📎 Files (<span id="fileCount">0</span>)
+                    <span class="file-sidebar-toggle" onclick="toggleFileSidebar()">✕</span>
+                </div>
+                <div class="file-list" id="fileList"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="newRoomModal" class="modal">
+        <div class="modal-box">
+            <h2>Create New Room</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Choose starting AI</p>
+            <div class="ai-selector-modal" id="aiSelectorModal">
+                <div class="ai-option selected" data-ai="Claude" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟣 Claude</div>
+                    <div class="ai-option-desc">Best reasoning</div>
+                </div>
+                <div class="ai-option" data-ai="ChatGPT" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟢 ChatGPT</div>
+                    <div class="ai-option-desc">General knowledge</div>
+                </div>
+                <div class="ai-option" data-ai="DeepSeek" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟠 DeepSeek</div>
+                    <div class="ai-option-desc">Fast & cheap</div>
+                </div>
+                <div class="ai-option" data-ai="Mistral" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🔴 Mistral</div>
+                    <div class="ai-option-desc">Privacy-first</div>
+                </div>
+            </div>
+            <input type="text" id="roomNameInput" placeholder="Room name" autofocus>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeNewRoomModal()">Cancel</button>
+                <button class="btn-confirm" onclick="createRoom()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000';
+        const TOKEN_LIMITS = { Claude: 100000, ChatGPT: 120000, DeepSeek: 60000, Mistral: 80000 };
+        const AI_CONFIGS = {
+            Claude: { color: '#667eea', emoji: '🟣', provider: 'Anthropic', order: 0 },
+            ChatGPT: { color: '#10a937', emoji: '🟢', provider: 'OpenAI', order: 1 },
+            DeepSeek: { color: '#d97706', emoji: '🟠', provider: 'DeepSeek', order: 2 },
+            Mistral: { color: '#dc2626', emoji: '🔴', provider: 'Mistral AI', order: 3 }
+        };
+        const AI_ORDER = ['Claude', 'ChatGPT', 'DeepSeek', 'Mistral'];
+        const MAX_FILE_SIZE = 5 * 1024 * 1024;
+        const MAX_FILES_PER_ROOM = 5;
+
+        let appState = { rooms: {}, currentRoomId: null, currentAI: 'Claude' };
+        let userSession = { isAuthenticated: false, email: null };
+        let startAI = 'Claude';
+        let tokenCount = 0;
+        let fileSidebarOpen = true;
+
+        function loadState() {
+            const saved = localStorage.getItem('appState');
+            if (saved) appState = JSON.parse(saved);
+            const session = localStorage.getItem('userSession');
+            if (session) {
+                userSession = JSON.parse(session);
+                if (userSession.isAuthenticated) showRoomList();
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('appState', JSON.stringify(appState));
+            localStorage.setItem('userSession', JSON.stringify(userSession));
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function handleLogin() {
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email) { alert('Enter email'); return; }
+            userSession.isAuthenticated = true;
+            userSession.email = email;
+            saveState();
+            showRoomList();
+        }
+
+        function handleLogout() {
+            if (confirm('Logout?')) { localStorage.clear(); location.reload(); }
+        }
+
+        function showRoomList() {
+            showScreen('roomListScreen');
+            renderRoomList();
+        }
+
+        function renderRoomList() {
+            const container = document.getElementById('roomsContainer');
+            const rooms = Object.values(appState.rooms);
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-rooms"><div class="empty-rooms-icon">🚀</div><div>No rooms yet. Create one!</div></div>';
+                return;
+            }
+            container.innerHTML = rooms.map(room => {
+                const ai = room.currentAI || 'Claude';
+                const config = AI_CONFIGS[ai];
+                return `<div class="room-card" onclick="openRoom('${room.id}')">
+                    <div class="room-card-title">${room.name}</div>
+                    <div class="room-card-meta">${config.emoji} ${config.provider} • ${room.messages.length} msgs • ${(room.files || []).length} files</div>
+                </div>`;
+            }).join('');
+        }
+
+        function showNewRoomModal() {
+            startAI = 'Claude';
+            document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector('[data-ai="Claude"]').classList.add('selected');
+            document.getElementById('newRoomModal').classList.add('active');
+            document.getElementById('roomNameInput').focus();
+        }
+
+        function closeNewRoomModal() {
+            document.getElementById('newRoomModal').classList.remove('active');
+            document.getElementById('roomNameInput').value = '';
+        }
+
+        function selectStartAI(element) {
+            document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            startAI = element.getAttribute('data-ai');
+        }
+
+        function createRoom() {
+            const name = document.getElementById('roomNameInput').value.trim();
+            if (!name) { alert('Enter room name'); return; }
+            const id = 'room-' + Date.now();
+            appState.rooms[id] = {
+                id: id, name: name, messages: [], currentAI: startAI, tokenCount: 0,
+                aiHistory: [startAI], files: [], createdAt: new Date().toISOString()
+            };
+            saveState();
+            closeNewRoomModal();
+            openRoom(id);
+        }
+
+        function openRoom(roomId) {
+            appState.currentRoomId = roomId;
+            const room = appState.rooms[roomId];
+            appState.currentAI = room.currentAI || 'Claude';
+            tokenCount = room.tokenCount || 0;
+            saveState();
+            document.getElementById('chatTitle').textContent = room.name;
+            document.getElementById('aiSelector').value = appState.currentAI;
+            updateTokenIndicator();
+            renderMessages();
+            renderFileList();
+            showScreen('chatScreen');
+            document.getElementById('messageInput').focus();
+        }
+
+        function switchAI() {
+            const selected = document.getElementById('aiSelector').value;
+            const room = appState.rooms[appState.currentRoomId];
+            appState.currentAI = selected;
+            room.currentAI = selected;
+            saveState();
+            renderMessages();
+        }
+
+        function updateTokenIndicator() {
+            const indicator = document.getElementById('tokenIndicator');
+            const limit = TOKEN_LIMITS[appState.currentAI];
+            const percentage = (tokenCount / limit) * 100;
+            indicator.textContent = `Tokens: ${tokenCount.toLocaleString()}/${limit.toLocaleString()}`;
+            indicator.classList.remove('warning', 'critical');
+            if (percentage >= 95) indicator.classList.add('critical');
+            else if (percentage >= 80) indicator.classList.add('warning');
+        }
+
+        function getNextAI() {
+            const currentIndex = AI_ORDER.indexOf(appState.currentAI);
+            return AI_ORDER[(currentIndex + 1) % AI_ORDER.length];
+        }
+
+        async function autoSwitchAI() {
+            const limit = TOKEN_LIMITS[appState.currentAI];
+            if (tokenCount >= limit) {
+                const nextAI = getNextAI();
+                const room = appState.rooms[appState.currentRoomId];
+                room.messages.push({
+                    type: 'system',
+                    text: `Switched from ${appState.currentAI} to ${nextAI}`,
+                    timestamp: new Date().toISOString()
+                });
+                appState.currentAI = nextAI;
+                room.currentAI = nextAI;
+                room.aiHistory.push(nextAI);
+                document.getElementById('aiSelector').value = nextAI;
+                renderMessages();
+                return true;
+            }
+            return false;
+        }
+
+        function estimateTokens(text) {
+            return Math.ceil(text.length / 4);
+        }
+
+        function triggerFileUpload() {
+            document.getElementById('fileInput').click();
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('dragOverlay').classList.add('active');
+        }
+
+        function handleDragLeave(e) {
+            if (e.target === document.getElementById('messagesArea')) {
+                document.getElementById('dragOverlay').classList.remove('active');
+            }
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('dragOverlay').classList.remove('active');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect({ target: { files: files } });
+            }
+        }
+
+        function handleFileSelect(input) {
+            const fileInput = input.target || document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            if (file.size > MAX_FILE_SIZE) {
+                alert('File too large (max 5MB)');
+                return;
+            }
+
+            const room = appState.rooms[appState.currentRoomId];
+            if (!room.files) room.files = [];
+            if (room.files.length >= MAX_FILES_PER_ROOM) {
+                alert(`Max ${MAX_FILES_PER_ROOM} files per room`);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const fileData = e.target.result;
+                const isImage = file.type.startsWith('image/');
+                const isPDF = file.type === 'application/pdf';
+                
+                room.messages.push({
+                    type: 'file',
+                    filename: file.name,
+                    filesize: file.size,
+                    mimetype: file.type,
+                    content: fileData,
+                    isImage: isImage,
+                    isPDF: isPDF,
+                    uploadedAt: new Date().toISOString()
+                });
+                room.files.push({ 
+                    id: 'file-' + Date.now(), 
+                    name: file.name, 
+                    size: file.size,
+                    type: file.type 
+                });
+                saveState();
+                renderMessages();
+                renderFileList();
+                fileInput.value = '';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function renderFileList() {
+            const room = appState.rooms[appState.currentRoomId];
+            const fileList = document.getElementById('fileList');
+            document.getElementById('fileCount').textContent = room.files.length;
+            
+            if (!room.files || room.files.length === 0) {
+                fileList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999; font-size: 12px;">No files yet</div>';
+                return;
+            }
+
+            fileList.innerHTML = room.files.map((file, idx) => {
+                const fileTypeEmoji = getFileTypeEmoji(file.type);
+                return `<div class="file-item-sidebar">
+                    <div class="file-item-name">${fileTypeEmoji} ${escapeHtml(file.name)}</div>
+                    <div class="file-item-type">${(file.size / 1024).toFixed(1)}KB</div>
+                    <div class="file-item-actions">
+                        <button class="file-item-btn" onclick="previewFile(${idx})">View</button>
+                        <button class="file-item-btn delete" onclick="deleteFile(${idx})">Del</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function getFileTypeEmoji(mimeType) {
+            if (mimeType.startsWith('image/')) return '🖼️';
+            if (mimeType === 'application/pdf') return '📕';
+            if (mimeType.includes('word') || mimeType.includes('document')) return '📄';
+            if (mimeType.includes('sheet')) return '📊';
+            if (mimeType.includes('text')) return '📝';
+            return '📎';
+        }
+
+        function previewFile(idx) {
+            const room = appState.rooms[appState.currentRoomId];
+            const fileMsg = room.messages.find((m, i) => {
+                let count = 0;
+                for (let j = 0; j < room.messages.length; j++) {
+                    if (room.messages[j].type === 'file') {
+                        if (count === idx) return true;
+                        count++;
+                    }
+                }
+                return false;
+            });
+            if (!fileMsg) return;
+            
+            if (fileMsg.isImage) {
+                window.open(fileMsg.content, '_blank');
+            } else if (fileMsg.isPDF) {
+                alert('PDF preview: Open in new window or download');
+                window.open(fileMsg.content, '_blank');
+            } else {
+                alert('File preview: ' + fileMsg.filename);
+            }
+        }
+
+        function deleteFile(idx) {
+            if (!confirm('Delete this file?')) return;
+            const room = appState.rooms[appState.currentRoomId];
+            
+            // Remove from files array
+            room.files.splice(idx, 1);
+            
+            // Remove from messages array
+            let fileCount = 0;
+            for (let i = room.messages.length - 1; i >= 0; i--) {
+                if (room.messages[i].type === 'file') {
+                    if (fileCount === idx) {
+                        room.messages.splice(i, 1);
+                        break;
+                    }
+                    fileCount++;
+                }
+            }
+            
+            saveState();
+            renderMessages();
+            renderFileList();
+        }
+
+        function toggleFileSidebar() {
+            fileSidebarOpen = !fileSidebarOpen;
+            document.getElementById('fileSidebar').classList.toggle('hidden', !fileSidebarOpen);
+        }
+
+        function renderMessages() {
+            const room = appState.rooms[appState.currentRoomId];
+            const area = document.getElementById('messagesArea');
+            
+            if (room.messages.length === 0) {
+                area.innerHTML = '<div class="drag-overlay" id="dragOverlay">📎 Drop file to upload</div><div class="empty-chat"><div class="empty-chat-icon">💬</div><div>Start chatting or drop files</div></div>';
+                return;
+            }
+
+            area.innerHTML = room.messages.map((msg, idx) => {
+                if (msg.type === 'system') {
+                    return `<div class="message system"><div class="message-bubble">ℹ️ ${escapeHtml(msg.text)}</div></div>`;
+                } else if (msg.type === 'file') {
+                    const emoji = getFileTypeEmoji(msg.mimetype);
+                    let preview = '';
+                    if (msg.isImage) {
+                        preview = `<div class="file-preview"><img src="${msg.content}" class="file-preview-image"></div>`;
+                    }
+                    return `<div class="message file file-message">
+                        <div class="message-actions"><button onclick="copyMessage(${idx})">Copy</button></div>
+                        <div class="message-bubble">${emoji} ${escapeHtml(msg.filename)}<br><small>${(msg.filesize/1024).toFixed(1)}KB</small>${preview}</div>
+                    </div>`;
+                } else if (msg.type === 'user') {
+                    return `<div class="message user">
+                        <div class="message-actions"><button onclick="copyMessage(${idx})">Copy</button></div>
+                        <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                    </div>`;
+                } else {
+                    const config = AI_CONFIGS[msg.ai];
+                    const badge = `<span class="ai-badge ai-${msg.ai.toLowerCase()}">${config.emoji} ${config.provider}</span>`;
+                    return `<div class="message ai">
+                        <div class="message-actions"><button onclick="copyMessage(${idx})">Copy</button></div>
+                        <div class="message-ai-info">${badge}</div>
+                        <div class="message-bubble">${escapeHtml(msg.text)}</div>
+                    </div>`;
+                }
+            }).join('');
+            
+            // Re-add drag overlay
+            const messagesArea = document.getElementById('messagesArea');
+            if (messagesArea.children.length > 0 && !messagesArea.querySelector('.drag-overlay')) {
+                const overlay = document.createElement('div');
+                overlay.className = 'drag-overlay';
+                overlay.id = 'dragOverlay';
+                overlay.textContent = '📎 Drop file to upload';
+                messagesArea.appendChild(overlay);
+            }
+
+            area.scrollTop = area.scrollHeight;
+        }
+
+        function copyMessage(idx) {
+            const room = appState.rooms[appState.currentRoomId];
+            const msg = room.messages[idx];
+            if (msg.type === 'user' || msg.type === 'ai') {
+                navigator.clipboard.writeText(msg.text).then(() => alert('Copied!'));
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const sendBtn = document.getElementById('sendBtn');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const room = appState.rooms[appState.currentRoomId];
+            tokenCount += estimateTokens(text);
+            room.messages.push({ type: 'user', text: text, timestamp: new Date().toISOString() });
+
+            input.value = '';
+            input.disabled = true;
+            sendBtn.disabled = true;
+            renderMessages();
+
+            if (await autoSwitchAI()) renderMessages();
+
+            try {
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: room.messages.filter(m => m.type !== 'system' && m.type !== 'file').map(m => ({
+                            role: m.type === 'user' ? 'user' : 'assistant', content: m.text
+                        })),
+                        ai: appState.currentAI
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                const data = await response.json();
+                const aiResponse = data.content;
+                tokenCount += estimateTokens(aiResponse);
+                room.messages.push({
+                    type: 'ai', ai: appState.currentAI, text: aiResponse, timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                room.messages.push({
+                    type: 'ai', ai: appState.currentAI, text: `⚠️ ${error.message}`, timestamp: new Date().toISOString()
+                });
+            }
+
+            room.tokenCount = tokenCount;
+            saveState();
+            renderMessages();
+            updateTokenIndicator();
+            input.disabled = false;
+            sendBtn.disabled = false;
+            input.focus();
+        }
+
+        function exportPDF() {
+            const room = appState.rooms[appState.currentRoomId];
+            let content = `${room.name}\n${'='.repeat(room.name.length)}\n\n`;
+            room.messages.forEach(msg => {
+                if (msg.type === 'user') content += `YOU: ${msg.text}\n\n`;
+                else if (msg.type === 'ai') content += `${msg.ai.toUpperCase()}: ${msg.text}\n\n`;
+                else if (msg.type === 'system') content += `[${msg.text}]\n\n`;
+                else if (msg.type === 'file') content += `[FILE UPLOADED: ${msg.filename} - ${(msg.filesize/1024).toFixed(1)}KB]\n\n`;
+            });
+            downloadFile(content, `${room.name}.txt`, 'text/plain');
+        }
+
+        function exportTXT() {
+            const room = appState.rooms[appState.currentRoomId];
+            let content = `Chat: ${room.name}\nDate: ${new Date().toLocaleString()}\n\n`;
+            room.messages.forEach(msg => {
+                if (msg.type === 'user') content += `You: ${msg.text}\n`;
+                else if (msg.type === 'ai') content += `${msg.ai}: ${msg.text}\n`;
+                else if (msg.type === 'system') content += `System: ${msg.text}\n`;
+                else if (msg.type === 'file') content += `File: ${msg.filename} (${(msg.filesize/1024).toFixed(1)}KB)\n`;
+                content += '\n';
+            });
+            downloadFile(content, `${room.name}.txt`, 'text/plain');
+        }
+
+        function exportMD() {
+            const room = appState.rooms[appState.currentRoomId];
+            let content = `# ${room.name}\n\n**Date**: ${new Date().toLocaleString()}\n**AI**: ${appState.currentAI}\n\n---\n\n`;
+            room.messages.forEach(msg => {
+                if (msg.type === 'user') content += `**You**: ${msg.text}\n\n`;
+                else if (msg.type === 'ai') content += `**${msg.ai}**: ${msg.text}\n\n`;
+                else if (msg.type === 'system') content += `> ${msg.text}\n\n`;
+                else if (msg.type === 'file') content += `\`\`\`\n📎 File: ${msg.filename} (${(msg.filesize/1024).toFixed(1)}KB)\n\`\`\`\n\n`;
+            });
+            downloadFile(content, `${room.name}.md`, 'text/markdown');
+        }
+
+        function exportJSON() {
+            const room = appState.rooms[appState.currentRoomId];
+            const json = { room: room.name, messages: room.messages, exported: new Date().toISOString() };
+            downloadFile(JSON.stringify(json, null, 2), `${room.name}.json`, 'application/json');
+        }
+
+        function downloadFile(content, filename, type) {
+            const blob = new Blob([content], { type: type });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function goToRoomList() { showRoomList(); }
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+
+        loadState();
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && document.getElementById('messageInput') === document.activeElement) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
