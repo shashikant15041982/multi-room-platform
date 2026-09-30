@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>AI Chat Workspace - Multi-Room</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #667eea;
+            --dark: #333;
+            --light: #f5f5f5;
+            --border: #ddd;
+            --ai-claude: #764ba2;
+            --ai-gpt: #10a981;
+            --ai-deepseek: #f59e0b;
+            --ai-mistral: #ef4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #app {
+            display: flex;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* ============= HEADER ============= */
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        /* ============= MAIN CONTAINER ============= */
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ============= SIDEBAR (ROOMS) ============= */
+        .sidebar {
+            width: 250px;
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            background: var(--light);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            font-size: 14px;
+            color: #999;
+            margin-bottom: 10px;
+        }
+
+        .btn-new-room {
+            width: 100%;
+            padding: 10px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .rooms-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .room-item {
+            padding: 12px 15px;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid #eee;
+        }
+
+        .room-item:hover {
+            background: white;
+        }
+
+        .room-item.active {
+            background: white;
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .room-item-title {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .room-item-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* ============= MAIN CHAT AREA ============= */
+        .chat-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .chat-header {
+            padding: 15px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .ai-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            padding: 6px 12px;
+            background: var(--light);
+            border-radius: 20px;
+        }
+
+        .ai-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--ai-claude);
+        }
+
+        .ai-dot.gpt { background: var(--ai-gpt); }
+        .ai-dot.deepseek { background: var(--ai-deepseek); }
+        .ai-dot.mistral { background: var(--ai-mistral); }
+
+        /* ============= MESSAGES ============= */
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 3px;
+        }
+
+        .empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            opacity: 0.5;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: var(--primary);
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: var(--light);
+            color: var(--dark);
+            border: 1px solid var(--border);
+        }
+
+        .message-ai-name {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 4px;
+        }
+
+        /* ============= INPUT AREA ============= */
+        .input-area {
+            padding: 15px;
+            border-top: 1px solid var(--border);
+            background: white;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-field input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        .input-field input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-send {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .btn-send:hover {
+            background: #5568d3;
+        }
+
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ============= MODAL ============= */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            min-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-content h2 {
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* ============= RESPONSIVE ============= */
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .modal-content {
+                min-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>💬 AI Chat Workspace</h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="toggleSidebar()">📋 Rooms</button>
+                <button class="btn btn-primary" onclick="logout()">Logout</button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTAINER -->
+        <div class="container">
+            <!-- SIDEBAR -->
+            <div class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>PROJECTS</h2>
+                    <button class="btn-new-room" onclick="openNewRoomModal()">+ New Room</button>
+                </div>
+                <div class="rooms-list" id="roomsList"></div>
+            </div>
+
+            <!-- CHAT AREA -->
+            <div class="chat-area">
+                <div class="chat-header">
+                    <div class="chat-title" id="chatTitle">Select a room to start</div>
+                    <div class="ai-indicator" id="aiIndicator">
+                        <span class="ai-dot" id="aiDot"></span>
+                        <span id="aiName">Waiting...</span>
+                    </div>
+                </div>
+
+                <div class="messages" id="messages">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🚀</div>
+                        <div>Select or create a room to begin</div>
+                    </div>
+                </div>
+
+                <div class="input-area">
+                    <div class="input-field">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Type your message..." 
+                            disabled
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button class="btn-send" id="sendBtn" onclick="sendMessage()" disabled>Send</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW ROOM MODAL -->
+    <div class="modal" id="newRoomModal">
+        <div class="modal-content">
+            <h2>Create New Room</h2>
+            <input type="text" id="roomNameInput" class="modal-input" placeholder="Room name (e.g., Project Alpha, Job Search, Data Analysis)">
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" onclick="closeNewRoomModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="createRoom()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============= STATE =============
+        const appState = {
+            rooms: {},
+            currentRoomId: null,
+            currentAI: 'claude',
+            aiHelpers: [
+                { id: 'claude', name: 'Claude', color: '#764ba2', tokens: 0, limit: 100000 },
+                { id: 'gpt', name: 'ChatGPT', color: '#10a981', tokens: 0, limit: 100000 },
+                { id: 'deepseek', name: 'DeepSeek', color: '#f59e0b', tokens: 0, limit: 100000 },
+                { id: 'mistral', name: 'Mistral', color: '#ef4444', tokens: 0, limit: 100000 }
+            ]
+        };
+
+        let userSession = {
+            isAuthenticated: false,
+            email: null
+        };
+
+        // ============= INITIALIZATION =============
+        function init() {
+            loadState();
+            if (!userSession.isAuthenticated) {
+                showLoginScreen();
+            } else {
+                renderRooms();
+            }
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('appState');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                appState.rooms = parsed.rooms || {};
+                appState.currentRoomId = parsed.currentRoomId;
+                appState.currentAI = parsed.currentAI || 'claude';
+            }
+
+            const session = localStorage.getItem('userSession');
+            if (session) {
+                userSession = JSON.parse(session);
+            }
+        }
+
+        function saveState() {
+            localStorage.setItem('appState', JSON.stringify({
+                rooms: appState.rooms,
+                currentRoomId: appState.currentRoomId,
+                currentAI: appState.currentAI
+            }));
+        }
+
+        // ============= LOGIN =============
+        function showLoginScreen() {
+            document.getElementById('app').innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: white;">
+                    <div style="text-align: center; padding: 40px; background: #f5f5f5; border-radius: 8px; min-width: 400px;">
+                        <h1 style="color: #667eea; margin-bottom: 20px;">💬 AI Chat Workspace</h1>
+                        <p style="color: #666; margin-bottom: 20px;">Chat with AI helpers in organized rooms</p>
+                        <input 
+                            type="email" 
+                            id="emailInput" 
+                            placeholder="Enter your email" 
+                            style="width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px;"
+                        >
+                        <button 
+                            onclick="login()" 
+                            style="width: 100%; padding: 10px; background: #667eea; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;"
+                        >Sign In</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function login() {
+            const email = document.getElementById('emailInput').value;
+            if (!email) {
+                alert('Please enter email');
+                return;
+            }
+            userSession.isAuthenticated = true;
+            userSession.email = email;
+            localStorage.setItem('userSession', JSON.stringify(userSession));
+            location.reload();
+        }
+
+        function logout() {
+            if (confirm('Logout?')) {
+                localStorage.removeItem('userSession');
+                localStorage.removeItem('appState');
+                location.reload();
+            }
+        }
+
+        // ============= ROOMS =============
+        function renderRooms() {
+            const roomsList = document.getElementById('roomsList');
+            const rooms = Object.values(appState.rooms);
+
+            if (rooms.length === 0) {
+                roomsList.innerHTML = '<div style="padding: 20px; text-align: center; color: #999;">No rooms yet</div>';
+                return;
+            }
+
+            roomsList.innerHTML = rooms.map(room => `
+                <div 
+                    class="room-item ${appState.currentRoomId === room.id ? 'active' : ''}"
+                    onclick="selectRoom('${room.id}')"
+                >
+                    <div class="room-item-title">${room.name}</div>
+                    <div class="room-item-meta">${room.messages.length} messages</div>
+                </div>
+            `).join('');
+        }
+
+        function openNewRoomModal() {
+            document.getElementById('newRoomModal').classList.add('active');
+            document.getElementById('roomNameInput').focus();
+        }
+
+        function closeNewRoomModal() {
+            document.getElementById('newRoomModal').classList.remove('active');
+        }
+
+        function createRoom() {
+            const name = document.getElementById('roomNameInput').value.trim();
+            if (!name) {
+                alert('Please enter room name');
+                return;
+            }
+
+            const roomId = 'room-' + Date.now();
+            appState.rooms[roomId] = {
+                id: roomId,
+                name: name,
+                messages: [],
+                createdAt: new Date().toISOString()
+            };
+
+            saveState();
+            closeNewRoomModal();
+            selectRoom(roomId);
+            renderRooms();
+        }
+
+        function selectRoom(roomId) {
+            appState.currentRoomId = roomId;
+            appState.currentAI = 'claude';
+            saveState();
+            renderChat();
+            renderRooms();
+            document.getElementById('messageInput').focus();
+        }
+
+        // ============= CHAT =============
+        function renderChat() {
+            const room = appState.rooms[appState.currentRoomId];
+            if (!room) return;
+
+            document.getElementById('chatTitle').textContent = room.name;
+            updateAIIndicator();
+            renderMessages();
+            enableInput();
+        }
+
+        function renderMessages() {
+            const room = appState.rooms[appState.currentRoomId];
+            const messagesEl = document.getElementById('messages');
+
+            if (room.messages.length === 0) {
+                messagesEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💬</div>
+                        <div>Start a conversation with AI helpers</div>
+                    </div>
+                `;
+                return;
+            }
+
+            messagesEl.innerHTML = room.messages.map(msg => `
+                <div class="message ${msg.type}">
+                    ${msg.type === 'ai' ? `<div class="message-ai-name">${msg.ai}</div>` : ''}
+                    <div class="message-content">${escapeHtml(msg.text)}</div>
+                </div>
+            `).join('');
+
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+
+            if (!text) return;
+
+            const room = appState.rooms[appState.currentRoomId];
+            room.messages.push({
+                type: 'user',
+                text: text,
+                timestamp: new Date().toISOString()
+            });
+
+            input.value = '';
+            renderMessages();
+
+            // Simulate AI response
+            setTimeout(() => {
+                const aiHelper = appState.aiHelpers.find(a => a.id === appState.currentAI);
+                room.messages.push({
+                    type: 'ai',
+                    ai: aiHelper.name,
+                    text: `(${aiHelper.name} responding...) I understand your message: "${text.substring(0, 50)}..." Let me help with that!`,
+                    timestamp: new Date().toISOString()
+                });
+
+                saveState();
+                renderMessages();
+
+                // Check if AI needs to switch (simulated token limit)
+                checkAISwitch();
+            }, 500);
+
+            saveState();
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function checkAISwitch() {
+            // Simulate: after 5 messages, suggest AI switch
+            const room = appState.rooms[appState.currentRoomId];
+            if (room.messages.length % 10 === 0) {
+                const currentIdx = appState.aiHelpers.findIndex(a => a.id === appState.currentAI);
+                const nextIdx = (currentIdx + 1) % appState.aiHelpers.length;
+                appState.currentAI = appState.aiHelpers[nextIdx].id;
+                saveState();
+                updateAIIndicator();
+            }
+        }
+
+        function updateAIIndicator() {
+            const aiHelper = appState.aiHelpers.find(a => a.id === appState.currentAI);
+            document.getElementById('aiName').textContent = aiHelper.name;
+            document.getElementById('aiDot').className = 'ai-dot ' + aiHelper.id;
+        }
+
+        function enableInput() {
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+        }
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').style.display = 
+                document.getElementById('sidebar').style.display === 'none' ? 'flex' : 'none';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // ============= START =============
+        init();
+    </script>
+</body>
+</html>
