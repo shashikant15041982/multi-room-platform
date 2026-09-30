@@ -6,385 +6,59 @@
     <title>AI Chat Workspace</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        html, body {
-            width: 100%;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        }
-
-        body {
-            background: white;
-            overflow: hidden;
-        }
-
-        /* ========== SCREENS ========== */
-        .screen {
-            display: none;
-            width: 100%;
-            height: 100vh;
-            flex-direction: column;
-            background: white;
-        }
-
-        .screen.active {
-            display: flex;
-        }
-
-        /* ========== LOGIN SCREEN ========== */
-        #loginScreen {
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .login-box {
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        .login-box h1 {
-            font-size: 28px;
-            color: #667eea;
-            margin-bottom: 10px;
-        }
-
-        .login-box p {
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 14px;
-        }
-
-        .login-box input {
-            width: 100%;
-            padding: 14px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            margin-bottom: 15px;
-            font-family: inherit;
-        }
-
-        .login-box button {
-            width: 100%;
-            padding: 14px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* ========== ROOM LIST SCREEN ========== */
-        #roomListScreen {
-            flex-direction: column;
-            padding: 15px;
-        }
-
-        .room-list-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #667eea;
-        }
-
-        .room-list-header h1 {
-            font-size: 20px;
-            color: #667eea;
-        }
-
-        .room-list-header button {
-            padding: 10px 16px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .rooms-container {
-            flex: 1;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .room-card {
-            padding: 16px;
-            background: #f5f5f5;
-            border-radius: 8px;
-            cursor: pointer;
-            border-left: 4px solid #667eea;
-            transition: all 0.2s;
-            user-select: none;
-        }
-
-        .room-card:active {
-            background: #e8e8e8;
-            transform: scale(0.98);
-        }
-
-        .room-card-title {
-            font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 6px;
-            color: #333;
-        }
-
-        .room-card-meta {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .empty-rooms {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 10px;
-            color: #999;
-            text-align: center;
-        }
-
-        .empty-rooms-icon {
-            font-size: 48px;
-            opacity: 0.5;
-        }
-
-        .logout-btn {
-            padding: 12px;
-            background: #f5f5f5;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            color: #333;
-            margin-top: auto;
-        }
-
-        /* ========== CHAT SCREEN ========== */
-        #chatScreen {
-            flex-direction: column;
-        }
-
-        .chat-header {
-            padding: 15px;
-            border-bottom: 1px solid #ddd;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-shrink: 0;
-            background: white;
-        }
-
-        .chat-header-left {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex: 1;
-            min-width: 0;
-        }
-
-        .chat-header-left button {
-            padding: 8px 12px;
-            background: #f5f5f5;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-            min-width: 40px;
-        }
-
-        .chat-header-title {
-            font-weight: 600;
-            font-size: 16px;
-            color: #333;
-            min-width: 0;
-            word-break: break-word;
-        }
-
-        .ai-indicator {
-            font-size: 12px;
-            padding: 4px 10px;
-            background: #f5f5f5;
-            border-radius: 20px;
-            white-space: nowrap;
-        }
-
-        .messages-area {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .message {
-            display: flex;
-            word-wrap: break-word;
-        }
-
-        .message.user {
-            justify-content: flex-end;
-        }
-
-        .message-bubble {
-            max-width: 80%;
-            padding: 10px 14px;
-            border-radius: 12px;
-            word-wrap: break-word;
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .message.user .message-bubble {
-            background: #667eea;
-            color: white;
-        }
-
-        .message.ai .message-bubble {
-            background: #f0f0f0;
-            color: #333;
-        }
-
-        .message-ai-name {
-            font-size: 11px;
-            color: #999;
-            margin-bottom: 4px;
-        }
-
-        .empty-chat {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: #999;
-            gap: 10px;
-            text-align: center;
-        }
-
-        .empty-chat-icon {
-            font-size: 48px;
-            opacity: 0.5;
-        }
-
-        .input-area {
-            padding: 12px 15px;
-            border-top: 1px solid #ddd;
-            display: flex;
-            gap: 10px;
-            flex-shrink: 0;
-            background: white;
-        }
-
-        .input-area input {
-            flex: 1;
-            padding: 10px 14px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            font-family: inherit;
-        }
-
-        .input-area button {
-            padding: 10px 16px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 14px;
-            white-space: nowrap;
-        }
-
-        .input-area button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-
-        /* ========== MODAL ========== */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal.active {
-            display: flex;
-        }
-
-        .modal-box {
-            background: white;
-            padding: 25px;
-            border-radius: 12px;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .modal-box h2 {
-            font-size: 18px;
-            color: #333;
-            margin-bottom: 20px;
-        }
-
-        .modal-box input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 14px;
-            margin-bottom: 20px;
-            font-family: inherit;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-        }
-
-        .modal-buttons button {
-            padding: 10px 16px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .btn-cancel {
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        .btn-confirm {
-            background: #667eea;
-            color: white;
-        }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background: white; overflow: hidden; }
+        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; background: white; }
+        .screen.active { display: flex; }
+        #loginScreen { justify-content: center; align-items: center; padding: 20px; }
+        .login-box { width: 100%; max-width: 400px; text-align: center; }
+        .login-box h1 { font-size: 28px; color: #667eea; margin-bottom: 10px; }
+        .login-box p { color: #666; margin-bottom: 30px; font-size: 14px; }
+        .login-box input { width: 100%; padding: 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; margin-bottom: 15px; font-family: inherit; }
+        .login-box button { width: 100%; padding: 14px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        #roomListScreen { flex-direction: column; padding: 15px; }
+        .room-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #667eea; }
+        .room-list-header h1 { font-size: 20px; color: #667eea; }
+        .room-list-header button { padding: 10px 16px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .rooms-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .room-card { padding: 16px; background: #f5f5f5; border-radius: 8px; cursor: pointer; border-left: 4px solid #667eea; transition: all 0.2s; user-select: none; }
+        .room-card:active { background: #e8e8e8; transform: scale(0.98); }
+        .room-card-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; color: #333; }
+        .room-card-meta { font-size: 12px; color: #999; }
+        .empty-rooms { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; color: #999; text-align: center; }
+        .empty-rooms-icon { font-size: 48px; opacity: 0.5; }
+        .logout-btn { padding: 12px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; color: #333; margin-top: auto; }
+        #chatScreen { flex-direction: column; }
+        .chat-header { padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; background: white; }
+        .chat-header-left { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+        .chat-header-left button { padding: 8px 12px; background: #f5f5f5; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; min-width: 40px; }
+        .chat-header-title { font-weight: 600; font-size: 16px; color: #333; min-width: 0; word-break: break-word; }
+        .ai-indicator { font-size: 12px; padding: 4px 10px; background: #f5f5f5; border-radius: 20px; white-space: nowrap; }
+        .messages-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .message { display: flex; word-wrap: break-word; }
+        .message.user { justify-content: flex-end; }
+        .message-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
+        .message.user .message-bubble { background: #667eea; color: white; }
+        .message.ai .message-bubble { background: #f0f0f0; color: #333; }
+        .message-ai-name { font-size: 11px; color: #999; margin-bottom: 4px; }
+        .empty-chat { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; color: #999; gap: 10px; text-align: center; }
+        .empty-chat-icon { font-size: 48px; opacity: 0.5; }
+        .input-area { padding: 12px 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; flex-shrink: 0; background: white; }
+        .input-area input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; }
+        .input-area button { padding: 10px 16px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; white-space: nowrap; }
+        .input-area button:disabled { opacity: 0.6; cursor: not-allowed; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-box { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; }
+        .modal-box h2 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        .modal-box input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 20px; font-family: inherit; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-buttons button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-cancel { background: #f5f5f5; color: #333; }
+        .btn-confirm { background: #667eea; color: white; }
     </style>
 </head>
 <body>
-    <!-- LOGIN SCREEN -->
     <div id="loginScreen" class="screen active">
         <div class="login-box">
             <h1>💬</h1>
@@ -395,7 +69,6 @@
         </div>
     </div>
 
-    <!-- ROOM LIST SCREEN -->
     <div id="roomListScreen" class="screen">
         <div class="room-list-header">
             <h1>📋 My Rooms</h1>
@@ -410,7 +83,6 @@
         <button class="logout-btn" onclick="handleLogout()">Logout</button>
     </div>
 
-    <!-- CHAT SCREEN -->
     <div id="chatScreen" class="screen">
         <div class="chat-header">
             <div class="chat-header-left">
@@ -431,7 +103,6 @@
         </div>
     </div>
 
-    <!-- NEW ROOM MODAL -->
     <div id="newRoomModal" class="modal">
         <div class="modal-box">
             <h2>Create New Room</h2>
@@ -444,20 +115,16 @@
     </div>
 
     <script>
-        // STATE
-        let appState = {
-            rooms: {},
-            currentRoomId: null,
-            currentAI: 'Claude'
-        };
+        // CONFIG - Change this to your backend URL
+        const API_URL = 'http://localhost:3000'; // Local dev
+        // For production, use: const API_URL = 'https://your-replit-name.replit.dev';
 
+        let appState = { rooms: {}, currentRoomId: null, currentAI: 'Claude' };
         let userSession = { isAuthenticated: false, email: null };
 
-        // LOAD STATE
         function loadState() {
             const saved = localStorage.getItem('appState');
             if (saved) appState = JSON.parse(saved);
-            
             const session = localStorage.getItem('userSession');
             if (session) {
                 userSession = JSON.parse(session);
@@ -470,17 +137,14 @@
             localStorage.setItem('userSession', JSON.stringify(userSession));
         }
 
-        // SCREEN MANAGEMENT
         function showScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
         }
 
-        // LOGIN
         function handleLogin() {
             const email = document.getElementById('emailInput').value.trim();
             if (!email) { alert('Enter email'); return; }
-            
             userSession.isAuthenticated = true;
             userSession.email = email;
             saveState();
@@ -488,13 +152,9 @@
         }
 
         function handleLogout() {
-            if (confirm('Logout?')) {
-                localStorage.clear();
-                location.reload();
-            }
+            if (confirm('Logout?')) { localStorage.clear(); location.reload(); }
         }
 
-        // ROOM LIST
         function showRoomList() {
             showScreen('roomListScreen');
             renderRoomList();
@@ -503,12 +163,10 @@
         function renderRoomList() {
             const container = document.getElementById('roomsContainer');
             const rooms = Object.values(appState.rooms);
-            
             if (rooms.length === 0) {
                 container.innerHTML = '<div class="empty-rooms"><div class="empty-rooms-icon">🚀</div><div>No rooms yet. Create one!</div></div>';
                 return;
             }
-
             container.innerHTML = rooms.map(room => `
                 <div class="room-card" onclick="openRoom('${room.id}')">
                     <div class="room-card-title">${room.name}</div>
@@ -517,7 +175,6 @@
             `).join('');
         }
 
-        // NEW ROOM
         function showNewRoomModal() {
             document.getElementById('newRoomModal').classList.add('active');
             document.getElementById('roomNameInput').focus();
@@ -531,31 +188,21 @@
         function createRoom() {
             const name = document.getElementById('roomNameInput').value.trim();
             if (!name) { alert('Enter room name'); return; }
-            
             const id = 'room-' + Date.now();
-            appState.rooms[id] = {
-                id: id,
-                name: name,
-                messages: [],
-                createdAt: new Date().toISOString()
-            };
-            
+            appState.rooms[id] = { id: id, name: name, messages: [], createdAt: new Date().toISOString() };
             saveState();
             closeNewRoomModal();
             openRoom(id);
         }
 
-        // CHAT
         function openRoom(roomId) {
             appState.currentRoomId = roomId;
             appState.currentAI = 'Claude';
             saveState();
-            
             const room = appState.rooms[roomId];
             document.getElementById('chatTitle').textContent = room.name;
             document.getElementById('aiIndicator').textContent = appState.currentAI;
             renderMessages();
-            
             showScreen('chatScreen');
             document.getElementById('messageInput').focus();
         }
@@ -563,12 +210,10 @@
         function renderMessages() {
             const room = appState.rooms[appState.currentRoomId];
             const area = document.getElementById('messagesArea');
-            
             if (room.messages.length === 0) {
                 area.innerHTML = '<div class="empty-chat"><div class="empty-chat-icon">💬</div><div>Start chatting with Claude</div></div>';
                 return;
             }
-
             area.innerHTML = room.messages.map(msg => {
                 if (msg.type === 'user') {
                     return `<div class="message user"><div class="message-bubble">${escapeHtml(msg.text)}</div></div>`;
@@ -576,7 +221,6 @@
                     return `<div class="message ai"><div class="message-ai-name">${msg.ai}</div><div class="message-bubble">${escapeHtml(msg.text)}</div></div>`;
                 }
             }).join('');
-
             area.scrollTop = area.scrollHeight;
         }
 
@@ -587,11 +231,7 @@
             if (!text) return;
 
             const room = appState.rooms[appState.currentRoomId];
-            room.messages.push({
-                type: 'user',
-                text: text,
-                timestamp: new Date().toISOString()
-            });
+            room.messages.push({ type: 'user', text: text, timestamp: new Date().toISOString() });
 
             input.value = '';
             input.disabled = true;
@@ -599,16 +239,10 @@
             renderMessages();
 
             try {
-                // Call Claude API
-                const response = await fetch('https://api.anthropic.com/v1/messages', {
+                const response = await fetch(`${API_URL}/api/chat`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'anthropic-version': '2023-06-01'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        model: 'claude-opus-4-1',
-                        max_tokens: 500,
                         messages: room.messages.map(m => ({
                             role: m.type === 'user' ? 'user' : 'assistant',
                             content: m.text
@@ -617,17 +251,14 @@
                 });
 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error?.message || `API error: ${response.status}`);
+                    throw new Error(`Server error: ${response.status}`);
                 }
 
                 const data = await response.json();
-                const aiResponse = data.content[0].text;
-
                 room.messages.push({
                     type: 'ai',
                     ai: 'Claude',
-                    text: aiResponse,
+                    text: data.content,
                     timestamp: new Date().toISOString()
                 });
 
@@ -636,7 +267,7 @@
                 room.messages.push({
                     type: 'ai',
                     ai: 'Claude',
-                    text: `⚠️ ${error.message}`,
+                    text: `⚠️ Cannot connect to server. Is it running?\n\nError: ${error.message}`,
                     timestamp: new Date().toISOString()
                 });
             }
@@ -648,20 +279,10 @@
             input.focus();
         }
 
-        function goToRoomList() {
-            showRoomList();
-        }
+        function goToRoomList() { showRoomList(); }
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
 
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        // INIT
         loadState();
-        
-        // ENTER KEY TO SEND
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && document.getElementById('messageInput') === document.activeElement) {
                 e.preventDefault();
