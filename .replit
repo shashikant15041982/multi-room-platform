@@ -1,0 +1,18 @@
+# Replit Configuration for Multi-Room Platform
+
+# Run command
+run = "npm start"
+
+# Language configuration
+language = "nodejs"
+
+# On environment boot
+onBoot = "npm install"
+
+# Packager settings
+[packager]
+enabled = true
+
+[packager.features]
+packageSearch = true
+guessImports = true
