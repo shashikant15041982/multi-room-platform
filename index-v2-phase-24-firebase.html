@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chat Workspace — Phase 24 Firebase</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 100%; height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+        body { background: white; overflow: hidden; }
+        .screen { display: none; width: 100%; height: 100vh; flex-direction: column; background: white; }
+        .screen.active { display: flex; }
+        #loginScreen { justify-content: center; align-items: center; padding: 20px; }
+        .login-box { width: 100%; max-width: 400px; text-align: center; }
+        .login-box h1 { font-size: 28px; color: #667eea; margin-bottom: 10px; }
+        .login-box p { color: #666; margin-bottom: 20px; font-size: 14px; }
+        .login-option { margin-bottom: 15px; }
+        .login-option input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; font-family: inherit; }
+        .login-option button { width: 100%; padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 5px; }
+        .login-option a { color: #667eea; text-decoration: none; font-size: 14px; display: block; margin-top: 5px; cursor: pointer; }
+        .sync-status { padding: 8px; background: #f0f8ff; border-radius: 4px; font-size: 12px; color: #0066cc; margin-top: 10px; text-align: center; }
+        .sync-status.synced { background: #e8f5e9; color: #2e7d32; }
+        .sync-status.offline { background: #fff3e0; color: #e65100; }
+        .sync-status.syncing { background: #f3e5f5; color: #7b1fa2; }
+        #roomListScreen { flex-direction: column; padding: 15px; }
+        .room-list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #667eea; }
+        .room-list-header h1 { font-size: 20px; color: #667eea; }
+        .room-list-actions { display: flex; gap: 10px; }
+        .room-list-actions button { padding: 10px 16px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .room-list-actions .secondary { background: #f5f5f5; color: #333; }
+        .rooms-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .room-card { padding: 16px; background: #f5f5f5; border-radius: 8px; cursor: pointer; border-left: 4px solid #667eea; transition: all 0.2s; }
+        .room-card:hover { background: #e8e8e8; }
+        .room-card-title { font-weight: 600; font-size: 16px; margin-bottom: 6px; color: #333; }
+        .room-card-meta { font-size: 12px; color: #999; }
+        .room-card-sync { font-size: 11px; color: #0066cc; margin-top: 4px; }
+        .empty-rooms { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; color: #999; text-align: center; }
+        .empty-rooms-icon { font-size: 48px; opacity: 0.5; }
+        .logout-btn { padding: 12px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; font-weight: 600; color: #333; margin-top: auto; }
+        #chatScreen { flex-direction: column; }
+        .chat-header { padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: white; }
+        .chat-header-left { display: flex; align-items: center; gap: 10px; flex: 1; }
+        .chat-header-left button { padding: 8px 12px; background: #f5f5f5; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
+        .chat-header-title { font-weight: 600; font-size: 16px; color: #333; }
+        .chat-controls { display: flex; gap: 8px; align-items: center; }
+        .ai-selector { font-size: 12px; padding: 6px 10px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 6px; cursor: pointer; }
+        .sync-indicator { font-size: 11px; padding: 4px 8px; border-radius: 4px; color: #0066cc; background: #f0f8ff; }
+        .sync-indicator.synced { color: #2e7d32; background: #e8f5e9; }
+        .sync-indicator.offline { color: #e65100; background: #fff3e0; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .messages-area { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; }
+        .message { display: flex; word-wrap: break-word; }
+        .message.user { justify-content: flex-end; }
+        .message-bubble { max-width: 80%; padding: 10px 14px; border-radius: 12px; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
+        .message.user .message-bubble { background: #667eea; color: white; }
+        .message.ai .message-bubble { background: #f0f0f0; color: #333; }
+        .message.system .message-bubble { background: #f0f8ff; color: #0066cc; font-size: 12px; text-align: center; }
+        .message-timestamp { font-size: 10px; color: #999; margin-top: 4px; }
+        .input-area { padding: 12px 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: white; flex-wrap: wrap; }
+        .input-area input { flex: 1; padding: 10px 14px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; min-width: 150px; }
+        .input-area button { padding: 10px 12px; background: #667eea; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal.active { display: flex; }
+        .modal-box { background: white; padding: 25px; border-radius: 12px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        .modal-box h2 { font-size: 18px; color: #333; margin-bottom: 20px; }
+        .modal-box input { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; margin-bottom: 20px; font-family: inherit; }
+        .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-buttons button { padding: 10px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; }
+        .btn-cancel { background: #f5f5f5; color: #333; }
+        .btn-confirm { background: #667eea; color: white; }
+        .ai-selector-modal { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+        .ai-option { padding: 12px; border: 2px solid #ddd; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+        .ai-option.selected { border-color: #667eea; background: #f0f0ff; }
+        .ai-option-name { font-weight: 600; margin-bottom: 4px; }
+        .ai-option-desc { font-size: 12px; color: #999; }
+        @media (max-width: 600px) {
+            .modal-box { width: 95%; }
+            .message-bubble { max-width: 90%; }
+        }
+    </style>
+</head>
+<body>
+    <div id="loginScreen" class="screen active">
+        <div class="login-box">
+            <h1>💬</h1>
+            <h1>AI Chat Workspace</h1>
+            <p>Phase 24: Firebase Cloud Sync</p>
+            
+            <div class="login-option">
+                <input type="email" id="emailInput" placeholder="Email" autofocus>
+                <input type="password" id="passwordInput" placeholder="Password (Firebase Auth)">
+                <button onclick="handleLogin()">Sign In</button>
+                <a onclick="handleSignup()">Create New Account</a>
+            </div>
+            
+            <div class="sync-status" id="authStatus">
+                ☁️ Connecting to Firebase...
+            </div>
+        </div>
+    </div>
+
+    <div id="roomListScreen" class="screen">
+        <div class="room-list-header">
+            <h1>📋 My Rooms</h1>
+            <div class="room-list-actions">
+                <button onclick="showNewRoomModal()">+ New</button>
+                <button class="secondary" onclick="handleLogout()">Logout</button>
+            </div>
+        </div>
+        <div class="rooms-container" id="roomsContainer">
+            <div class="empty-rooms">
+                <div class="empty-rooms-icon">🚀</div>
+                <div>No rooms yet. Create one!</div>
+            </div>
+        </div>
+        <div class="sync-status synced" id="syncStatus">
+            ✅ Synced with Firebase
+        </div>
+    </div>
+
+    <div id="chatScreen" class="screen">
+        <div class="chat-header">
+            <div class="chat-header-left">
+                <button onclick="goToRoomList()">← Back</button>
+                <div class="chat-header-title" id="chatTitle">Chat</div>
+            </div>
+            <div class="chat-controls">
+                <select class="ai-selector" id="aiSelector" onchange="switchAI()">
+                    <option value="Claude">🟣 Claude</option>
+                    <option value="ChatGPT">🟢 ChatGPT</option>
+                    <option value="DeepSeek">🟠 DeepSeek</option>
+                    <option value="Mistral">🔴 Mistral</option>
+                </select>
+                <div class="sync-indicator synced" id="chatSyncIndicator">
+                    ✅ Syncing
+                </div>
+            </div>
+        </div>
+        <div class="messages-area" id="messagesArea">
+            <div style="text-align: center; color: #999;">Start chatting...</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Type message..." autocomplete="off">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <div id="newRoomModal" class="modal">
+        <div class="modal-box">
+            <h2>Create New Room</h2>
+            <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Choose starting AI</p>
+            <div class="ai-selector-modal" id="aiSelectorModal">
+                <div class="ai-option selected" data-ai="Claude" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟣 Claude</div>
+                    <div class="ai-option-desc">Best reasoning</div>
+                </div>
+                <div class="ai-option" data-ai="ChatGPT" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟢 ChatGPT</div>
+                    <div class="ai-option-desc">General knowledge</div>
+                </div>
+                <div class="ai-option" data-ai="DeepSeek" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🟠 DeepSeek</div>
+                    <div class="ai-option-desc">Fast & cheap</div>
+                </div>
+                <div class="ai-option" data-ai="Mistral" onclick="selectStartAI(this)">
+                    <div class="ai-option-name">🔴 Mistral</div>
+                    <div class="ai-option-desc">Privacy-first</div>
+                </div>
+            </div>
+            <input type="text" id="roomNameInput" placeholder="Room name" autofocus>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeNewRoomModal()">Cancel</button>
+                <button class="btn-confirm" onclick="createRoom()">Create</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+
+    <script>
+        // IMPORTANT: Replace with your Firebase config from console.firebase.google.com
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+            projectId: "YOUR_PROJECT",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // Constants
+        const API_URL = 'http://localhost:3000';
+        const TOKEN_LIMITS = { Claude: 100000, ChatGPT: 120000, DeepSeek: 60000, Mistral: 80000 };
+        const AI_CONFIGS = {
+            Claude: { color: '#667eea', emoji: '🟣', provider: 'Anthropic', order: 0 },
+            ChatGPT: { color: '#10a937', emoji: '🟢', provider: 'OpenAI', order: 1 },
+            DeepSeek: { color: '#d97706', emoji: '🟠', provider: 'DeepSeek', order: 2 },
+            Mistral: { color: '#dc2626', emoji: '🔴', provider: 'Mistral AI', order: 3 }
+        };
+        const AI_ORDER = ['Claude', 'ChatGPT', 'DeepSeek', 'Mistral'];
+
+        // State
+        let appState = { rooms: {}, currentRoomId: null, currentAI: 'Claude' };
+        let userSession = { isAuthenticated: false, email: null, uid: null };
+        let startAI = 'Claude';
+        let syncStatus = 'idle'; // idle, syncing, synced, offline
+        let firebaseReady = false;
+
+        // Initialize Firebase listeners
+        function initializeFirebase() {
+            // Auth state listener
+            auth.onAuthStateChanged(async (user) => {
+                if (user) {
+                    userSession.isAuthenticated = true;
+                    userSession.email = user.email;
+                    userSession.uid = user.uid;
+                    updateAuthStatus('Authenticated: ' + user.email);
+                    setupRealtimeSync(user.uid);
+                    showRoomList();
+                } else {
+                    userSession.isAuthenticated = false;
+                    updateAuthStatus('Not authenticated');
+                    showScreen('loginScreen');
+                }
+            });
+
+            // Connection state listener
+            db.ref('.info/connected').on('value', (snapshot) => {
+                if (snapshot.val() === true) {
+                    syncStatus = 'synced';
+                    updateSyncStatus('✅ Online', 'synced');
+                } else {
+                    syncStatus = 'offline';
+                    updateSyncStatus('⚠️ Offline', 'offline');
+                }
+            });
+
+            firebaseReady = true;
+        }
+
+        function updateAuthStatus(message) {
+            const el = document.getElementById('authStatus');
+            if (el) el.textContent = message;
+        }
+
+        function updateSyncStatus(message, status = 'syncing') {
+            const el = document.getElementById('syncStatus');
+            if (el) {
+                el.textContent = message;
+                el.className = 'sync-status ' + (status === 'synced' ? 'synced' : status === 'offline' ? 'offline' : '');
+            }
+            const chatEl = document.getElementById('chatSyncIndicator');
+            if (chatEl) {
+                chatEl.textContent = message;
+                chatEl.className = 'sync-indicator ' + (status === 'synced' ? 'synced' : status === 'offline' ? 'offline' : '');
+            }
+        }
+
+        function setupRealtimeSync(uid) {
+            const roomsRef = db.ref(`users/${uid}/rooms`);
+            
+            roomsRef.on('value', (snapshot) => {
+                appState.rooms = snapshot.val() || {};
+                renderRoomList();
+                updateSyncStatus('✅ Synced', 'synced');
+            }, (error) => {
+                console.error('Sync error:', error);
+                updateSyncStatus('⚠️ Sync error', 'offline');
+            });
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if (!email || !password) {
+                alert('Enter email and password');
+                return;
+            }
+
+            try {
+                updateAuthStatus('🔄 Signing in...');
+                await auth.signInWithEmailAndPassword(email, password);
+                // onAuthStateChanged handles navigation
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+                updateAuthStatus('❌ Login failed');
+            }
+        }
+
+        async function handleSignup() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if (!email || !password) {
+                alert('Enter email and password');
+                return;
+            }
+
+            try {
+                updateAuthStatus('🔄 Creating account...');
+                await auth.createUserWithEmailAndPassword(email, password);
+                // onAuthStateChanged handles rest
+            } catch (error) {
+                alert('Signup failed: ' + error.message);
+                updateAuthStatus('❌ Signup failed');
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm('Logout?')) {
+                await auth.signOut();
+            }
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        function showRoomList() {
+            showScreen('roomListScreen');
+            renderRoomList();
+        }
+
+        function renderRoomList() {
+            const container = document.getElementById('roomsContainer');
+            const rooms = Object.values(appState.rooms);
+            if (rooms.length === 0) {
+                container.innerHTML = '<div class="empty-rooms"><div class="empty-rooms-icon">🚀</div><div>No rooms yet. Create one!</div></div>';
+                return;
+            }
+            container.innerHTML = rooms.map(room => {
+                const ai = room.currentAI || 'Claude';
+                const config = AI_CONFIGS[ai];
+                return `<div class="room-card" onclick="openRoom('${room.id}')">
+                    <div class="room-card-title">${room.name}</div>
+                    <div class="room-card-meta">${config.emoji} ${config.provider} • ${room.messages.length} msgs</div>
+                    <div class="room-card-sync">📱 Last: ${new Date(room.lastSync || room.createdAt).toLocaleString()}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function showNewRoomModal() {
+            startAI = 'Claude';
+            document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('selected'));
+            document.querySelector('[data-ai="Claude"]').classList.add('selected');
+            document.getElementById('newRoomModal').classList.add('active');
+        }
+
+        function closeNewRoomModal() {
+            document.getElementById('newRoomModal').classList.remove('active');
+        }
+
+        function selectStartAI(element) {
+            document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+            startAI = element.getAttribute('data-ai');
+        }
+
+        async function createRoom() {
+            const name = document.getElementById('roomNameInput').value.trim();
+            if (!name) {
+                alert('Enter room name');
+                return;
+            }
+
+            const roomId = 'room-' + Date.now();
+            const roomData = {
+                id: roomId,
+                name: name,
+                messages: [],
+                currentAI: startAI,
+                tokenCount: 0,
+                aiHistory: [startAI],
+                createdAt: new Date().toISOString(),
+                lastSync: new Date().toISOString()
+            };
+
+            try {
+                updateSyncStatus('🔄 Syncing...', 'syncing');
+                const uid = userSession.uid;
+                await db.ref(`users/${uid}/rooms/${roomId}`).set(roomData);
+                appState.rooms[roomId] = roomData;
+                closeNewRoomModal();
+                openRoom(roomId);
+            } catch (error) {
+                alert('Failed to create room: ' + error.message);
+                updateSyncStatus('❌ Sync failed', 'offline');
+            }
+        }
+
+        function openRoom(roomId) {
+            appState.currentRoomId = roomId;
+            const room = appState.rooms[roomId];
+            appState.currentAI = room.currentAI || 'Claude';
+            document.getElementById('chatTitle').textContent = room.name;
+            document.getElementById('aiSelector').value = appState.currentAI;
+            renderMessages();
+            showScreen('chatScreen');
+            document.getElementById('messageInput').focus();
+        }
+
+        function switchAI() {
+            const selected = document.getElementById('aiSelector').value;
+            const room = appState.rooms[appState.currentRoomId];
+            appState.currentAI = selected;
+            room.currentAI = selected;
+            syncRoomToFirebase();
+            renderMessages();
+        }
+
+        function renderMessages() {
+            const room = appState.rooms[appState.currentRoomId];
+            const area = document.getElementById('messagesArea');
+            
+            if (room.messages.length === 0) {
+                area.innerHTML = '<div style="text-align: center; color: #999;">Start chatting...</div>';
+                return;
+            }
+
+            area.innerHTML = room.messages.map((msg, idx) => {
+                const time = new Date(msg.timestamp).toLocaleTimeString();
+                if (msg.type === 'system') {
+                    return `<div class="message system"><div class="message-bubble">ℹ️ ${msg.text}</div></div>`;
+                } else if (msg.type === 'user') {
+                    return `<div class="message user">
+                        <div><div class="message-bubble">${msg.text}</div>
+                        <div class="message-timestamp">${time}</div></div>
+                    </div>`;
+                } else {
+                    const config = AI_CONFIGS[msg.ai];
+                    return `<div class="message ai">
+                        <div><div style="font-size:11px;color:#666;margin-bottom:4px;">${config.emoji} ${config.provider}</div>
+                        <div class="message-bubble">${msg.text}</div>
+                        <div class="message-timestamp">${time}</div></div>
+                    </div>`;
+                }
+            }).join('');
+            area.scrollTop = area.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const room = appState.rooms[appState.currentRoomId];
+            room.messages.push({ type: 'user', text: text, timestamp: new Date().toISOString() });
+            input.value = '';
+            renderMessages();
+
+            try {
+                updateSyncStatus('🔄 Getting response...', 'syncing');
+                const response = await fetch(`${API_URL}/api/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        messages: room.messages.filter(m => m.type !== 'system').map(m => ({
+                            role: m.type === 'user' ? 'user' : 'assistant',
+                            content: m.text
+                        })),
+                        ai: appState.currentAI
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Server error: ${response.status}`);
+                const data = await response.json();
+                room.messages.push({
+                    type: 'ai',
+                    ai: appState.currentAI,
+                    text: data.content,
+                    timestamp: new Date().toISOString()
+                });
+            } catch (error) {
+                room.messages.push({
+                    type: 'ai',
+                    ai: appState.currentAI,
+                    text: '⚠️ ' + error.message,
+                    timestamp: new Date().toISOString()
+                });
+            }
+
+            room.lastSync = new Date().toISOString();
+            await syncRoomToFirebase();
+            renderMessages();
+        }
+
+        async function syncRoomToFirebase() {
+            try {
+                const uid = userSession.uid;
+                const roomId = appState.currentRoomId;
+                const room = appState.rooms[roomId];
+                room.lastSync = new Date().toISOString();
+                await db.ref(`users/${uid}/rooms/${roomId}`).set(room);
+                updateSyncStatus('✅ Synced', 'synced');
+            } catch (error) {
+                console.error('Sync error:', error);
+                updateSyncStatus('❌ Sync error', 'offline');
+            }
+        }
+
+        function goToRoomList() {
+            showRoomList();
+        }
+
+        // Start
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && document.getElementById('messageInput') === document.activeElement) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        initializeFirebase();
+    </script>
+</body>
+</html>
