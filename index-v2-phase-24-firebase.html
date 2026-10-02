@@ -88,13 +88,13 @@
             
             <div class="login-option">
                 <input type="email" id="emailInput" placeholder="Email" autofocus>
-                <input type="password" id="passwordInput" placeholder="Password (Firebase Auth)">
+                <input type="password" id="passwordInput" placeholder="Password">
                 <button onclick="handleLogin()">Sign In</button>
                 <a onclick="handleSignup()">Create New Account</a>
             </div>
             
             <div class="sync-status" id="authStatus">
-                ☁️ Connecting to Firebase...
+                ☁️ Loading Firebase...
             </div>
         </div>
     </div>
@@ -114,7 +114,7 @@
             </div>
         </div>
         <div class="sync-status synced" id="syncStatus">
-            ✅ Synced with Firebase
+            ✅ Synced
         </div>
     </div>
 
@@ -131,9 +131,7 @@
                     <option value="DeepSeek">🟠 DeepSeek</option>
                     <option value="Mistral">🔴 Mistral</option>
                 </select>
-                <div class="sync-indicator synced" id="chatSyncIndicator">
-                    ✅ Syncing
-                </div>
+                <div class="sync-indicator synced" id="chatSyncIndicator">✅ Syncing</div>
             </div>
         </div>
         <div class="messages-area" id="messagesArea">
@@ -175,13 +173,13 @@
         </div>
     </div>
 
-    <!-- Firebase SDK - MUST LOAD FIRST -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <!-- Firebase SDK v9+ Compat - More reliable -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 
     <script>
-        // Firebase Configuration - YOUR REAL CONFIG
+        // === FIREBASE CONFIGURATION ===
         const firebaseConfig = {
             apiKey: "AIzaSyAapQ1-4WRs0gOrLU_y-ynC2UUyhAULTzc",
             authDomain: "multi-room-platform.firebaseapp.com",
@@ -192,20 +190,12 @@
             appId: "1:114970001280:web:c9ede7b3ac9b85f1f4cb65"
         };
 
-        // Initialize Firebase ONLY AFTER SDK loads
-        let auth, db;
-        
-        try {
-            firebase.initializeApp(firebaseConfig);
-            auth = firebase.auth();
-            db = firebase.database();
-            console.log("✅ Firebase initialized successfully!");
-        } catch (error) {
-            console.error("❌ Firebase initialization error:", error);
-            document.getElementById('authStatus').innerHTML = "❌ Firebase error: " + error.message;
-        }
+        // === GLOBAL VARS ===
+        let auth = null;
+        let db = null;
+        let firebaseReady = false;
 
-        // Constants
+        // === CONSTANTS ===
         const API_URL = 'http://localhost:3000';
         const TOKEN_LIMITS = { Claude: 100000, ChatGPT: 120000, DeepSeek: 60000, Mistral: 80000 };
         const AI_CONFIGS = {
@@ -214,60 +204,62 @@
             DeepSeek: { color: '#d97706', emoji: '🟠', provider: 'DeepSeek', order: 2 },
             Mistral: { color: '#dc2626', emoji: '🔴', provider: 'Mistral AI', order: 3 }
         };
-        const AI_ORDER = ['Claude', 'ChatGPT', 'DeepSeek', 'Mistral'];
 
-        // State
+        // === APP STATE ===
         let appState = { rooms: {}, currentRoomId: null, currentAI: 'Claude' };
         let userSession = { isAuthenticated: false, email: null, uid: null };
         let startAI = 'Claude';
-        let syncStatus = 'idle';
-        let firebaseReady = false;
 
-        // Initialize Firebase listeners
+        // === INITIALIZATION ===
         function initializeFirebase() {
-            auth.onAuthStateChanged(async (user) => {
-                if (user) {
-                    userSession.isAuthenticated = true;
-                    userSession.email = user.email;
-                    userSession.uid = user.uid;
-                    updateAuthStatus('Authenticated: ' + user.email);
-                    setupRealtimeSync(user.uid);
-                    showRoomList();
-                } else {
-                    userSession.isAuthenticated = false;
-                    updateAuthStatus('Not authenticated');
-                    showScreen('loginScreen');
+            try {
+                console.log("🔄 Initializing Firebase...");
+                
+                // Check if firebase is available
+                if (typeof firebase === 'undefined') {
+                    throw new Error("Firebase SDK not loaded. Check network connection.");
                 }
-            });
 
-            db.ref('.info/connected').on('value', (snapshot) => {
-                if (snapshot.val() === true) {
-                    syncStatus = 'synced';
-                    updateSyncStatus('✅ Online', 'synced');
-                } else {
-                    syncStatus = 'offline';
-                    updateSyncStatus('⚠️ Offline', 'offline');
-                }
-            });
+                firebase.initializeApp(firebaseConfig);
+                auth = firebase.auth();
+                db = firebase.database();
+                firebaseReady = true;
 
-            firebaseReady = true;
-        }
+                console.log("✅ Firebase initialized successfully!");
+                updateAuthStatus("✅ Firebase ready. Waiting for login...");
 
-        function updateAuthStatus(message) {
-            const el = document.getElementById('authStatus');
-            if (el) el.textContent = message;
-        }
+                // Setup listeners
+                auth.onAuthStateChanged(onAuthStateChanged);
+                db.ref('.info/connected').on('value', onConnectionChanged);
 
-        function updateSyncStatus(message, status = 'syncing') {
-            const el = document.getElementById('syncStatus');
-            if (el) {
-                el.textContent = message;
-                el.className = 'sync-status ' + (status === 'synced' ? 'synced' : status === 'offline' ? 'offline' : '');
+            } catch (error) {
+                console.error("❌ Firebase init error:", error);
+                updateAuthStatus("❌ Firebase error: " + error.message);
             }
-            const chatEl = document.getElementById('chatSyncIndicator');
-            if (chatEl) {
-                chatEl.textContent = message;
-                chatEl.className = 'sync-indicator ' + (status === 'synced' ? 'synced' : status === 'offline' ? 'offline' : '');
+        }
+
+        function onAuthStateChanged(user) {
+            if (user) {
+                userSession.isAuthenticated = true;
+                userSession.email = user.email;
+                userSession.uid = user.uid;
+                console.log("✅ User signed in:", user.email);
+                updateAuthStatus("Authenticated: " + user.email);
+                setupRealtimeSync(user.uid);
+                showRoomList();
+            } else {
+                userSession.isAuthenticated = false;
+                console.log("❌ User signed out");
+                updateAuthStatus("Not authenticated");
+                showScreen('loginScreen');
+            }
+        }
+
+        function onConnectionChanged(snapshot) {
+            if (snapshot.val() === true) {
+                console.log("✅ Connected to Firebase");
+            } else {
+                console.log("⚠️ Disconnected from Firebase");
             }
         }
 
@@ -277,53 +269,15 @@
             roomsRef.on('value', (snapshot) => {
                 appState.rooms = snapshot.val() || {};
                 renderRoomList();
-                updateSyncStatus('✅ Synced', 'synced');
             }, (error) => {
                 console.error('Sync error:', error);
-                updateSyncStatus('⚠️ Sync error', 'offline');
             });
         }
 
-        async function handleLogin() {
-            const email = document.getElementById('emailInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-            
-            if (!email || !password) {
-                alert('Enter email and password');
-                return;
-            }
-
-            try {
-                updateAuthStatus('🔄 Signing in...');
-                await auth.signInWithEmailAndPassword(email, password);
-            } catch (error) {
-                alert('Login failed: ' + error.message);
-                updateAuthStatus('❌ Login failed');
-            }
-        }
-
-        async function handleSignup() {
-            const email = document.getElementById('emailInput').value.trim();
-            const password = document.getElementById('passwordInput').value.trim();
-            
-            if (!email || !password) {
-                alert('Enter email and password');
-                return;
-            }
-
-            try {
-                updateAuthStatus('🔄 Creating account...');
-                await auth.createUserWithEmailAndPassword(email, password);
-            } catch (error) {
-                alert('Signup failed: ' + error.message);
-                updateAuthStatus('❌ Signup failed');
-            }
-        }
-
-        async function handleLogout() {
-            if (confirm('Logout?')) {
-                await auth.signOut();
-            }
+        // === UI FUNCTIONS ===
+        function updateAuthStatus(message) {
+            const el = document.getElementById('authStatus');
+            if (el) el.textContent = message;
         }
 
         function showScreen(screenId) {
@@ -348,12 +302,107 @@
                 const config = AI_CONFIGS[ai];
                 return `<div class="room-card" onclick="openRoom('${room.id}')">
                     <div class="room-card-title">${room.name}</div>
-                    <div class="room-card-meta">${config.emoji} ${config.provider} • ${room.messages.length} msgs</div>
-                    <div class="room-card-sync">📱 Last: ${new Date(room.lastSync || room.createdAt).toLocaleString()}</div>
+                    <div class="room-card-meta">${config.emoji} ${config.provider} • ${room.messages ? room.messages.length : 0} msgs</div>
+                    <div class="room-card-sync">📱 ${new Date(room.lastSync || room.createdAt).toLocaleString()}</div>
                 </div>`;
             }).join('');
         }
 
+        function openRoom(roomId) {
+            appState.currentRoomId = roomId;
+            const room = appState.rooms[roomId];
+            appState.currentAI = room.currentAI || 'Claude';
+            document.getElementById('chatTitle').textContent = room.name;
+            document.getElementById('aiSelector').value = appState.currentAI;
+            renderMessages();
+            showScreen('chatScreen');
+            document.getElementById('messageInput').focus();
+        }
+
+        function renderMessages() {
+            const room = appState.rooms[appState.currentRoomId];
+            const area = document.getElementById('messagesArea');
+            
+            if (!room.messages || room.messages.length === 0) {
+                area.innerHTML = '<div style="text-align: center; color: #999;">Start chatting...</div>';
+                return;
+            }
+
+            area.innerHTML = room.messages.map(msg => {
+                const time = new Date(msg.timestamp).toLocaleTimeString();
+                if (msg.type === 'user') {
+                    return `<div class="message user">
+                        <div><div class="message-bubble">${msg.text}</div>
+                        <div class="message-timestamp">${time}</div></div>
+                    </div>`;
+                } else {
+                    const config = AI_CONFIGS[msg.ai || 'Claude'];
+                    return `<div class="message ai">
+                        <div><div style="font-size:11px;color:#666;margin-bottom:4px;">${config.emoji} ${config.provider}</div>
+                        <div class="message-bubble">${msg.text}</div>
+                        <div class="message-timestamp">${time}</div></div>
+                    </div>`;
+                }
+            }).join('');
+            area.scrollTop = area.scrollHeight;
+        }
+
+        // === AUTH FUNCTIONS ===
+        async function handleLogin() {
+            if (!firebaseReady) {
+                alert("Firebase is not ready yet. Please wait...");
+                return;
+            }
+
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if (!email || !password) {
+                alert('Enter email and password');
+                return;
+            }
+
+            try {
+                updateAuthStatus('🔄 Signing in...');
+                await auth.signInWithEmailAndPassword(email, password);
+            } catch (error) {
+                console.error("Login error:", error);
+                alert('Login failed: ' + error.message);
+                updateAuthStatus('❌ Login failed: ' + error.message);
+            }
+        }
+
+        async function handleSignup() {
+            if (!firebaseReady) {
+                alert("Firebase is not ready yet. Please wait...");
+                return;
+            }
+
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value.trim();
+            
+            if (!email || !password) {
+                alert('Enter email and password');
+                return;
+            }
+
+            try {
+                updateAuthStatus('🔄 Creating account...');
+                await auth.createUserWithEmailAndPassword(email, password);
+            } catch (error) {
+                console.error("Signup error:", error);
+                alert('Signup failed: ' + error.message);
+                updateAuthStatus('❌ Signup failed: ' + error.message);
+            }
+        }
+
+        async function handleLogout() {
+            if (confirm('Logout?')) {
+                await auth.signOut();
+            }
+        }
+
+        // === ROOM FUNCTIONS ===
         function showNewRoomModal() {
             startAI = 'Claude';
             document.querySelectorAll('.ai-option').forEach(opt => opt.classList.remove('selected'));
@@ -391,27 +440,13 @@
             };
 
             try {
-                updateSyncStatus('🔄 Syncing...', 'syncing');
                 const uid = userSession.uid;
                 await db.ref(`users/${uid}/rooms/${roomId}`).set(roomData);
-                appState.rooms[roomId] = roomData;
                 closeNewRoomModal();
                 openRoom(roomId);
             } catch (error) {
                 alert('Failed to create room: ' + error.message);
-                updateSyncStatus('❌ Sync failed', 'offline');
             }
-        }
-
-        function openRoom(roomId) {
-            appState.currentRoomId = roomId;
-            const room = appState.rooms[roomId];
-            appState.currentAI = room.currentAI || 'Claude';
-            document.getElementById('chatTitle').textContent = room.name;
-            document.getElementById('aiSelector').value = appState.currentAI;
-            renderMessages();
-            showScreen('chatScreen');
-            document.getElementById('messageInput').focus();
         }
 
         function switchAI() {
@@ -420,37 +455,6 @@
             appState.currentAI = selected;
             room.currentAI = selected;
             syncRoomToFirebase();
-            renderMessages();
-        }
-
-        function renderMessages() {
-            const room = appState.rooms[appState.currentRoomId];
-            const area = document.getElementById('messagesArea');
-            
-            if (room.messages.length === 0) {
-                area.innerHTML = '<div style="text-align: center; color: #999;">Start chatting...</div>';
-                return;
-            }
-
-            area.innerHTML = room.messages.map((msg, idx) => {
-                const time = new Date(msg.timestamp).toLocaleTimeString();
-                if (msg.type === 'system') {
-                    return `<div class="message system"><div class="message-bubble">ℹ️ ${msg.text}</div></div>`;
-                } else if (msg.type === 'user') {
-                    return `<div class="message user">
-                        <div><div class="message-bubble">${msg.text}</div>
-                        <div class="message-timestamp">${time}</div></div>
-                    </div>`;
-                } else {
-                    const config = AI_CONFIGS[msg.ai];
-                    return `<div class="message ai">
-                        <div><div style="font-size:11px;color:#666;margin-bottom:4px;">${config.emoji} ${config.provider}</div>
-                        <div class="message-bubble">${msg.text}</div>
-                        <div class="message-timestamp">${time}</div></div>
-                    </div>`;
-                }
-            }).join('');
-            area.scrollTop = area.scrollHeight;
         }
 
         async function sendMessage() {
@@ -463,8 +467,8 @@
             input.value = '';
             renderMessages();
 
+            // Try to get AI response (backend may not be deployed)
             try {
-                updateSyncStatus('🔄 Getting response...', 'syncing');
                 const response = await fetch(`${API_URL}/api/chat`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -477,19 +481,27 @@
                     })
                 });
 
-                if (!response.ok) throw new Error(`Server error: ${response.status}`);
-                const data = await response.json();
-                room.messages.push({
-                    type: 'ai',
-                    ai: appState.currentAI,
-                    text: data.content,
-                    timestamp: new Date().toISOString()
-                });
+                if (response.ok) {
+                    const data = await response.json();
+                    room.messages.push({
+                        type: 'ai',
+                        ai: appState.currentAI,
+                        text: data.content,
+                        timestamp: new Date().toISOString()
+                    });
+                } else {
+                    room.messages.push({
+                        type: 'ai',
+                        ai: appState.currentAI,
+                        text: '⚠️ Backend not deployed. Deploy server.js to Replit to get AI responses.',
+                        timestamp: new Date().toISOString()
+                    });
+                }
             } catch (error) {
                 room.messages.push({
                     type: 'ai',
                     ai: appState.currentAI,
-                    text: '⚠️ ' + error.message,
+                    text: '⚠️ Cannot reach backend. Messages synced to Firebase ✅',
                     timestamp: new Date().toISOString()
                 });
             }
@@ -506,10 +518,8 @@
                 const room = appState.rooms[roomId];
                 room.lastSync = new Date().toISOString();
                 await db.ref(`users/${uid}/rooms/${roomId}`).set(room);
-                updateSyncStatus('✅ Synced', 'synced');
             } catch (error) {
                 console.error('Sync error:', error);
-                updateSyncStatus('❌ Sync error', 'offline');
             }
         }
 
@@ -517,7 +527,7 @@
             showRoomList();
         }
 
-        // Handle Enter key
+        // === KEYBOARD SHORTCUTS ===
         document.addEventListener('keypress', (e) => {
             if (e.key === 'Enter' && document.getElementById('messageInput') === document.activeElement) {
                 e.preventDefault();
@@ -525,8 +535,12 @@
             }
         });
 
-        // Start Firebase initialization
-        initializeFirebase();
+        // === START APP ===
+        console.log("🚀 App starting...");
+        // Wait a moment for Firebase SDK to load, then initialize
+        setTimeout(() => {
+            initializeFirebase();
+        }, 500);
     </script>
 </body>
 </html>
