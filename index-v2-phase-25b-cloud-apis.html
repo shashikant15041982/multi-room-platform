@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Room AI Chat - Phase 25B (Cloud APIs)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            height: 90vh;
+            margin: 0 auto;
+        }
+
+        .sidebar {
+            width: 300px;
+            background: #f7f7f7;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background: #667eea;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .user-info {
+            padding: 15px 20px;
+            background: #f0f0f0;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .user-info-item {
+            margin: 5px 0;
+            word-break: break-all;
+        }
+
+        .user-info-label {
+            font-weight: bold;
+        }
+
+        .rooms-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .room-item {
+            padding: 12px;
+            margin: 5px 0;
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-item:hover {
+            background: #f5f5f5;
+            border-color: #667eea;
+        }
+
+        .room-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .room-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .room-delete {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .new-room-btn {
+            margin: 10px;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            margin: 10px;
+            padding: 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header h2 {
+            color: #333;
+            font-size: 18px;
+        }
+
+        .ai-status {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ai-selector {
+            padding: 8px 12px;
+            background: #f0f0f0;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .message {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-content {
+            max-width: 60%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.ai .message-content {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #e0e0e0;
+        }
+
+        .message-meta {
+            font-size: 11px;
+            color: #999;
+            padding: 0 16px;
+            margin-top: 4px;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-controls {
+            display: flex;
+            gap: 10px;
+            flex: 1;
+            flex-direction: column;
+        }
+
+        .ai-select-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .ai-select-row label {
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .ai-select-row select {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .message-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            resize: none;
+            max-height: 100px;
+        }
+
+        .input-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .send-btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            margin: auto;
+            height: fit-content;
+        }
+
+        .auth-container h1 {
+            margin-bottom: 30px;
+            color: #333;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .status-bar {
+            padding: 10px 20px;
+            background: #f5f5f5;
+            font-size: 12px;
+            color: #666;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .loading {
+            color: #ffa94d;
+            font-style: italic;
+        }
+
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div id="authUI" class="auth-container">
+        <h1>Multi-Room AI Chat</h1>
+        <p style="text-align: center; margin-bottom: 20px; color: #666; font-size: 14px;">
+            Demo: test@test.com / test1234
+        </p>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="authEmail" value="test@test.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="authPassword" value="test1234">
+        </div>
+        <button class="auth-btn" onclick="handleSignUp()">Sign Up</button>
+        <button class="auth-btn" onclick="handleSignIn()">Sign In</button>
+        <div id="authError" class="error-message" style="display: none;"></div>
+    </div>
+
+    <div id="appUI" class="container" style="display: none;">
+        <div class="sidebar">
+            <div class="sidebar-header">🤖 Multi-Room Chat</div>
+            <div class="user-info">
+                <div class="user-info-item"><span class="user-info-label">User:</span> <span id="userEmail"></span></div>
+                <div class="user-info-item"><span class="user-info-label">Mode:</span> Cloud APIs</div>
+            </div>
+            <button class="new-room-btn" onclick="createNewRoom()">+ New Room</button>
+            <div class="rooms-container" id="roomsList"></div>
+            <button class="logout-btn" onclick="handleLogout()">Logout</button>
+        </div>
+
+        <div class="main-content">
+            <div class="chat-header" id="chatHeader" style="display: none;">
+                <h2 id="roomTitle"></h2>
+                <div class="ai-status" id="aiStatus"></div>
+            </div>
+
+            <div class="empty-state" id="emptyState">
+                <p>💬 Select a room to start chatting</p>
+            </div>
+
+            <div class="messages-container" id="messagesContainer" style="display: none;"></div>
+
+            <div class="input-area" id="inputArea" style="display: none;">
+                <div class="input-controls">
+                    <div class="ai-select-row">
+                        <label>AI Helper:</label>
+                        <select id="aiSelect" onchange="updateAIStatus()">
+                            <option value="gemini">✨ Gemini (Google)</option>
+                            <option value="groq">⚡ Groq (Fast)</option>
+                            <option value="together">🔄 Together AI</option>
+                        </select>
+                    </div>
+                    <textarea class="message-input" id="messageInput" placeholder="Ask anything..." rows="2"></textarea>
+                </div>
+                <button class="send-btn" id="sendBtn" onclick="sendMessage()">Send</button>
+            </div>
+
+            <div class="status-bar" id="statusBar"></div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIG =====
+        const API_KEYS = {
+            gemini: 'YOUR_GEMINI_KEY_HERE',      // Replace with your key
+            groq: 'YOUR_GROQ_KEY_HERE',           // Replace with your key
+            together: 'YOUR_TOGETHER_KEY_HERE'    // Replace with your key
+        };
+
+        const AI_MODELS = {
+            gemini: 'gemini-pro',
+            groq: 'mixtral-8x7b-32768',
+            together: 'meta-llama/Llama-2-70b-chat-hf'
+        };
+
+        // ===== STATE =====
+        let currentUser = null;
+        let currentRoom = null;
+        let currentAI = 'gemini';
+
+        // ===== AUTH =====
+        async function handleSignUp() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) {
+                showAuthError('Fill all fields');
+                return;
+            }
+            currentUser = { email };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showAppUI();
+            loadRooms();
+        }
+
+        async function handleSignIn() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            if (!email || !password) {
+                showAuthError('Fill all fields');
+                return;
+            }
+            currentUser = { email };
+            localStorage.setItem('currentUser', JSON.stringify(currentUser));
+            showAppUI();
+            loadRooms();
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            showAuthUI();
+        }
+
+        function showAuthUI() {
+            document.getElementById('authUI').style.display = 'flex';
+            document.getElementById('appUI').style.display = 'none';
+        }
+
+        function showAppUI() {
+            document.getElementById('authUI').style.display = 'none';
+            document.getElementById('appUI').style.display = 'flex';
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function showAuthError(msg) {
+            const el = document.getElementById('authError');
+            el.textContent = msg;
+            el.style.display = 'block';
+            setTimeout(() => el.style.display = 'none', 5000);
+        }
+
+        // ===== ROOMS =====
+        async function createNewRoom() {
+            const name = prompt('Room name:');
+            if (!name) return;
+            const roomId = Date.now().toString();
+            const rooms = getRoomsFromLocal(currentUser.email);
+            rooms[roomId] = { id: roomId, name: name };
+            saveRoomsToLocal(currentUser.email, rooms);
+            loadRooms();
+        }
+
+        function loadRooms() {
+            const rooms = getRoomsFromLocal(currentUser.email);
+            renderRooms(rooms);
+        }
+
+        function renderRooms(rooms) {
+            const container = document.getElementById('roomsList');
+            container.innerHTML = '';
+            Object.entries(rooms).forEach(([id, room]) => {
+                const el = document.createElement('div');
+                el.className = 'room-item' + (currentRoom?.id === id ? ' active' : '');
+                el.innerHTML = `
+                    <span class="room-name">${room.name}</span>
+                    <button class="room-delete" onclick="deleteRoom('${id}')">Delete</button>
+                `;
+                el.onclick = (e) => {
+                    if (!e.target.classList.contains('room-delete')) {
+                        selectRoom(id, room);
+                    }
+                };
+                container.appendChild(el);
+            });
+        }
+
+        function selectRoom(id, room) {
+            currentRoom = { id, ...room };
+            document.getElementById('chatHeader').style.display = 'flex';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('messagesContainer').style.display = 'flex';
+            document.getElementById('inputArea').style.display = 'flex';
+            document.getElementById('roomTitle').textContent = room.name;
+            updateAIStatus();
+
+            document.getElementById('messagesContainer').innerHTML = '';
+            const messages = getMessagesFromLocal(currentUser.email, id);
+            messages.forEach(msg => displayMessage(msg));
+        }
+
+        function displayMessage(msg) {
+            const container = document.getElementById('messagesContainer');
+            const el = document.createElement('div');
+            el.className = 'message ' + msg.role;
+            const ts = new Date(msg.timestamp).toLocaleTimeString();
+            const aiInfo = msg.ai ? ` • ${msg.ai}` : '';
+            el.innerHTML = `
+                <div class="message-content">${escapeHtml(msg.content)}</div>
+                <div class="message-meta">${ts}${aiInfo}</div>
+            `;
+            container.appendChild(el);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const msg = input.value.trim();
+            if (!msg || !currentRoom) return;
+
+            const aiName = currentAI;
+
+            // Save user message
+            const userMsg = {
+                role: 'user',
+                content: msg,
+                ai: aiName,
+                timestamp: new Date().toISOString()
+            };
+            saveMessageToLocal(currentUser.email, currentRoom.id, userMsg);
+            displayMessage(userMsg);
+            input.value = '';
+
+            // Show loading
+            const sendBtn = document.getElementById('sendBtn');
+            sendBtn.disabled = true;
+            sendBtn.textContent = '⏳ Waiting...';
+
+            try {
+                // Call cloud API
+                const response = await callCloudAI(aiName, msg);
+
+                // Save AI response
+                const aiMsg = {
+                    role: 'ai',
+                    content: response,
+                    ai: aiName,
+                    timestamp: new Date().toISOString()
+                };
+                saveMessageToLocal(currentUser.email, currentRoom.id, aiMsg);
+                displayMessage(aiMsg);
+
+            } catch (error) {
+                alert('Error: ' + error.message);
+                console.error('API Error:', error);
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = 'Send';
+            }
+        }
+
+        async function callCloudAI(aiName, question) {
+            if (aiName === 'gemini') {
+                return await callGeminiAPI(question);
+            } else if (aiName === 'groq') {
+                return await callGroqAPI(question);
+            } else if (aiName === 'together') {
+                return await callTogetherAPI(question);
+            }
+        }
+
+        async function callGeminiAPI(question) {
+            const apiKey = API_KEYS.gemini;
+            if (apiKey.includes('YOUR_')) {
+                throw new Error('Gemini API key not set. Update API_KEYS in code.');
+            }
+
+            const response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: question }]
+                        }]
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Gemini API error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.candidates[0].content.parts[0].text;
+        }
+
+        async function callGroqAPI(question) {
+            const apiKey = API_KEYS.groq;
+            if (apiKey.includes('YOUR_')) {
+                throw new Error('Groq API key not set. Update API_KEYS in code.');
+            }
+
+            const response = await fetch(
+                'https://api.groq.com/openai/v1/chat/completions',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'mixtral-8x7b-32768',
+                        messages: [{ role: 'user', content: question }],
+                        max_tokens: 1000
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Groq API error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content;
+        }
+
+        async function callTogetherAPI(question) {
+            const apiKey = API_KEYS.together;
+            if (apiKey.includes('YOUR_')) {
+                throw new Error('Together API key not set. Update API_KEYS in code.');
+            }
+
+            const response = await fetch(
+                'https://api.together.xyz/inference',
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${apiKey}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: 'meta-llama/Llama-2-70b-chat-hf',
+                        prompt: question,
+                        max_tokens: 1000
+                    })
+                }
+            );
+
+            if (!response.ok) {
+                throw new Error(`Together API error: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            return data.output.choices[0].text;
+        }
+
+        function updateAIStatus() {
+            currentAI = document.getElementById('aiSelect').value;
+            const statusEl = document.getElementById('aiStatus');
+            const icons = { gemini: '✨', groq: '⚡', together: '🔄' };
+            const names = { gemini: 'Gemini', groq: 'Groq', together: 'Together' };
+            statusEl.innerHTML = `<div class="ai-selector">${icons[currentAI]} ${names[currentAI]}</div>`;
+        }
+
+        function deleteRoom(id) {
+            if (!confirm('Delete room?')) return;
+            const rooms = getRoomsFromLocal(currentUser.email);
+            delete rooms[id];
+            localStorage.removeItem(`room_${currentUser.email}_${id}_messages`);
+            saveRoomsToLocal(currentUser.email, rooms);
+            if (currentRoom?.id === id) {
+                currentRoom = null;
+                document.getElementById('emptyState').style.display = 'flex';
+                document.getElementById('messagesContainer').style.display = 'none';
+                document.getElementById('inputArea').style.display = 'none';
+            }
+            loadRooms();
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // ===== STORAGE =====
+        function getRoomsFromLocal(email) {
+            return JSON.parse(localStorage.getItem(`rooms_${email}`) || '{}');
+        }
+
+        function saveRoomsToLocal(email, rooms) {
+            localStorage.setItem(`rooms_${email}`, JSON.stringify(rooms));
+        }
+
+        function getMessagesFromLocal(email, roomId) {
+            return JSON.parse(localStorage.getItem(`room_${email}_${roomId}_messages`) || '[]');
+        }
+
+        function saveMessageToLocal(email, roomId, message) {
+            const messages = getMessagesFromLocal(email, roomId);
+            messages.push(message);
+            localStorage.setItem(`room_${email}_${roomId}_messages`, JSON.stringify(messages));
+        }
+
+        // ===== INIT =====
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey && currentRoom) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        window.addEventListener('load', () => {
+            const saved = localStorage.getItem('currentUser');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                showAppUI();
+                loadRooms();
+            } else {
+                showAuthUI();
+            }
+        });
+    </script>
+</body>
+</html>
